@@ -67,7 +67,20 @@ function sanitizeDate(val) {
 }
 
 // ─── Middleware ───
-app.use(helmet({ contentSecurityPolicy: false })); // CSP off for SPA proxy setups
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],  // inline styles used by React
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+}));
 app.use(express.json({ limit: '2mb' }));
 app.use(cors({
   origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map(s => s.trim()),
@@ -482,30 +495,41 @@ app.post('/api/sxe/*', async (req, res) => {
       return res.status(403).json({ message: 'SXe endpoint not allowed' });
     }
 
+    // Sanitize path — only allow alphanumeric, hyphens, underscores, slashes, dots
+    const safePath = sxePath.replace(/[^a-zA-Z0-9\-_./]/g, '');
+    if (safePath !== sxePath || safePath.includes('..')) {
+      return res.status(400).json({ message: 'Invalid SXe path' });
+    }
+
     const authed = await ensureAuthenticated();
     if (!authed) return res.status(503).json({ message: 'Not connected to Infor' });
-    const targetUrl = `${config.ionBase}/${config.tenantId}/SX/webuiserviceinterface/sxeapi/${sxePath}`;
 
-    let proxyRes = await fetch(targetUrl, {
+    // Build URL from trusted base + validated path
+    const trustedBase = `${config.ionBase}/${config.tenantId}/SX/webuiserviceinterface/sxeapi/`;
+    const targetUrl = new URL(safePath, trustedBase).href;
+
+    // Verify the URL still points to our Infor instance
+    if (!targetUrl.startsWith(trustedBase)) {
+      return res.status(400).json({ message: 'Invalid SXe path' });
+    }
+
+    const fetchOptions = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', 'accept': 'application/json',
         'Authorization': `Bearer ${tokenCache.accessToken}`, 'Token': tokenCache.apiToken,
       },
       body: JSON.stringify(req.body),
-    });
+    };
+
+    let proxyRes = await fetch(targetUrl, fetchOptions);
 
     if (proxyRes.status === 401) {
       const reauthed = await authenticate();
       if (reauthed) {
-        proxyRes = await fetch(targetUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json', 'accept': 'application/json',
-            'Authorization': `Bearer ${tokenCache.accessToken}`, 'Token': tokenCache.apiToken,
-          },
-          body: JSON.stringify(req.body),
-        });
+        fetchOptions.headers['Authorization'] = `Bearer ${tokenCache.accessToken}`;
+        fetchOptions.headers['Token'] = tokenCache.apiToken;
+        proxyRes = await fetch(targetUrl, fetchOptions);
       } else return res.status(401).json({ message: 'Re-auth failed' });
     }
 

@@ -92,7 +92,7 @@ function checkGroupMembership(username, groupName) {
   return new Promise((resolve, reject) => {
     ad.isUserMemberOf(username, groupName, (err, isMember) => {
       if (err) {
-        console.error(`[AD] Error checking ${username} in ${groupName}:`, err.message);
+        console.error('[AD] Error checking group membership:', username, 'in', groupName, '-', err.message);
         reject(err);
       } else {
         resolve(isMember);
@@ -116,17 +116,17 @@ async function isUserAllowed(username) {
     try {
       const isMember = await checkGroupMembership(username, group);
       if (isMember) {
-        console.log(`[AD] ${username} is member of ${group} — access granted`);
+        console.log('[AD] Access granted:', username, 'is member of', group);
         setCachedMembership(username, true);
         return true;
       }
     } catch (err) {
       // Log but continue checking other groups
-      console.warn(`[AD] Failed to check ${username} in ${group}: ${err.message}`);
+      console.warn('[AD] Failed to check membership:', username, 'in', group, '-', err.message);
     }
   }
 
-  console.log(`[AD] ${username} is not in any allowed group — access denied`);
+  console.log('[AD] Access denied:', username, 'is not in any allowed group');
   setCachedMembership(username, false);
   return false;
 }
