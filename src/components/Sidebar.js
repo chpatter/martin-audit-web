@@ -2,8 +2,13 @@ import React from 'react';
 import { useTheme } from '../config/ThemeContext';
 import MODULES from '../config/modules';
 
-export default function Sidebar({ activeModule, onModuleChange, collapsed, onToggle, connectionInfo, onSignOut }) {
+export default function Sidebar({ activeModule, onModuleChange, collapsed, onToggle, connectionInfo, onSignOut, userRole }) {
   const { theme, isDark, toggleTheme } = useTheme();
+  const ADMIN_ONLY_MODULES = ['security'];
+  const visibleModules = MODULES.filter(m => {
+    if (ADMIN_ONLY_MODULES.includes(m.id) && userRole !== 'ADMIN') return false;
+    return true;
+  });
 
   // Sidebar always uses dark colors regardless of theme
   const sidebarColors = {
@@ -99,7 +104,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
 
       {/* Module List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-        {MODULES.map((m) => (
+        {visibleModules.map((m) => (
           <button
             key={m.id}
             onClick={() => m.active && onModuleChange(m.id)}

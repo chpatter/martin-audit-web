@@ -1,57 +1,67 @@
 /**
- * Active Directory Authentication Middleware
+ * Active Directory Authentication & Role Middleware
  *
  * Validates that the Windows user (passed via IIS Windows Authentication)
- * belongs to an allowed AD security group.
+ * belongs to at least one AD security group, and determines their role tier.
  *
  * Flow:
  *   1. IIS authenticates the user via Kerberos/NTLM (automatic, no login screen)
  *   2. IIS passes the verified username as X-IIS-WindowsAuthUser header to Node.js
- *   3. This middleware checks AD group membership
- *   4. Caches results so we're not hitting AD on every request
+ *   3. This middleware checks AD group membership across all role groups
+ *   4. Assigns the highest matching role to the request
+ *   5. Caches results for 15 minutes
+ *
+ * Roles (additive):
+ *   USERS     → Operational fields, no Security module
+ *   FINANCE   → + pricing, costs, margins, credit limits
+ *   SENSITIVE → + bank accounts, tax IDs, 1099 info
+ *   ADMIN     → + Security module, everything unmasked
  *
  * Config (server/.env):
  *   AD_ENABLED=true
- *   AD_URL=ldap://your-domain-controller.martinsupply.local
- *   AD_BASE_DN=dc=martinsupply,dc=local
- *   AD_USERNAME=svc-audit-reader@martinsupply.local
- *   AD_PASSWORD=your-ad-service-account-password
- *   AD_ALLOWED_GROUPS=Martin-Audit-Users
+ *   AD_URL=ldap://your-domain-controller
+ *   AD_BASE_DN=DC=domain,DC=local
+ *   AD_USERNAME=service-account@domain.local
+ *   AD_PASSWORD=password
+ *   AD_GROUP_USERS=Martin-Audit-Users
+ *   AD_GROUP_FINANCE=Martin-Audit-Finance
+ *   AD_GROUP_SENSITIVE=Martin-Audit-Sensitive
+ *   AD_GROUP_ADMIN=Martin-Audit-Admin
  */
 
 const ActiveDirectory = require('activedirectory2');
+const { ROLES, getRoleGroupMapping, getRoleName } = require('./roles');
 
 // ─── Cache ───
-// Caches group membership checks so we don't query AD on every HTTP request.
-// Cache entries expire after 15 minutes.
-const membershipCache = new Map();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+// Caches role lookups per user. Expires after 15 minutes.
+const roleCache = new Map();
+const CACHE_TTL = 15 * 60 * 1000;
 
-function getCachedMembership(username) {
-  const entry = membershipCache.get(username.toLowerCase());
+function getCachedRole(username) {
+  const entry = roleCache.get(username.toLowerCase());
   if (!entry) return null;
   if (Date.now() - entry.timestamp > CACHE_TTL) {
-    membershipCache.delete(username.toLowerCase());
+    roleCache.delete(username.toLowerCase());
     return null;
   }
-  return entry.allowed;
+  return entry.role;
 }
 
-function setCachedMembership(username, allowed) {
-  membershipCache.set(username.toLowerCase(), { allowed, timestamp: Date.now() });
+function setCachedRole(username, role) {
+  roleCache.set(username.toLowerCase(), { role, timestamp: Date.now() });
 }
 
 // ─── AD Client Setup ───
 
 let ad = null;
 let adEnabled = false;
-let allowedGroups = [];
+let roleGroupMap = {};
 
 function initAD() {
   adEnabled = process.env.AD_ENABLED === 'true';
 
   if (!adEnabled) {
-    console.log('[AD] Disabled — all users allowed (set AD_ENABLED=true to enforce)');
+    console.log('[AD] Disabled — all users get ADMIN role (set AD_ENABLED=true to enforce)');
     return;
   }
 
@@ -61,29 +71,20 @@ function initAD() {
   const password = process.env.AD_PASSWORD;
 
   if (!url || !baseDN || !username || !password) {
-    console.warn('[AD] Missing AD config — disabling AD auth. Need: AD_URL, AD_BASE_DN, AD_USERNAME, AD_PASSWORD');
+    console.warn('[AD] Missing config — disabling. Need: AD_URL, AD_BASE_DN, AD_USERNAME, AD_PASSWORD');
     adEnabled = false;
     return;
   }
 
-  allowedGroups = (process.env.AD_ALLOWED_GROUPS || '')
-    .split(',')
-    .map(g => g.trim())
-    .filter(Boolean);
+  roleGroupMap = getRoleGroupMapping();
 
-  if (allowedGroups.length === 0) {
-    console.warn('[AD] No AD_ALLOWED_GROUPS configured — all authenticated users allowed');
+  ad = new ActiveDirectory({ url, baseDN, username, password });
+
+  console.log('[AD] Enabled — role groups:');
+  for (const [group, role] of Object.entries(roleGroupMap)) {
+    console.log('  ', getRoleName(role), '→', group);
   }
-
-  ad = new ActiveDirectory({
-    url,
-    baseDN,
-    username,
-    password,
-  });
-
-  console.log(`[AD] Enabled — checking groups: ${allowedGroups.join(', ') || '(any)'}`);
-  console.log(`[AD] Domain controller: ${url}`);
+  console.log('[AD] Domain controller:', url);
 }
 
 // ─── Check Group Membership ───
@@ -101,49 +102,56 @@ function checkGroupMembership(username, groupName) {
   });
 }
 
-async function isUserAllowed(username) {
-  if (!adEnabled) return true;
-  if (allowedGroups.length === 0) return true;
+// ─── Determine User's Role ───
+// Checks all role groups and returns the highest role the user belongs to.
+// Returns 0 if the user is in no groups (access denied).
 
-  // Check cache first
-  const cached = getCachedMembership(username);
-  if (cached !== null) {
-    return cached;
-  }
+async function getUserRole(username) {
+  if (!adEnabled) return ROLES.ADMIN;
 
-  // Check each allowed group
-  for (const group of allowedGroups) {
+  // Check cache
+  const cached = getCachedRole(username);
+  if (cached !== null) return cached;
+
+  let highestRole = 0;
+
+  for (const [group, role] of Object.entries(roleGroupMap)) {
     try {
       const isMember = await checkGroupMembership(username, group);
-      if (isMember) {
-        console.log('[AD] Access granted:', username, 'is member of', group);
-        setCachedMembership(username, true);
-        return true;
+      if (isMember && role > highestRole) {
+        highestRole = role;
+        console.log('[AD] Match:', username, 'is member of', group, '→', getRoleName(role));
       }
     } catch (err) {
-      // Log but continue checking other groups
-      console.warn('[AD] Failed to check membership:', username, 'in', group, '-', err.message);
+      console.warn('[AD] Failed to check:', username, 'in', group, '-', err.message);
     }
   }
 
-  console.log('[AD] Access denied:', username, 'is not in any allowed group');
-  setCachedMembership(username, false);
-  return false;
+  if (highestRole > 0) {
+    console.log('[AD] Role assigned:', username, '→', getRoleName(highestRole));
+  } else {
+    console.log('[AD] Access denied:', username, 'is not in any role group');
+  }
+
+  setCachedRole(username, highestRole);
+  return highestRole;
 }
 
 // ─── Express Middleware ───
 
 function adAuthMiddleware(req, res, next) {
-  // Skip auth check for health endpoint
+  // Skip auth for health endpoint
   if (req.path === '/api/health') return next();
 
-  // IIS passes the authenticated Windows user via X-IIS-WindowsAuthUser header.
-  // Format is typically DOMAIN\username — we extract just the username.
+  // IIS passes the authenticated Windows user via header.
+  // Format is typically DOMAIN\username — extract just the username.
   const rawUser = req.headers['x-iis-windowsauthuser'] || req.headers['x-windows-user'] || '';
   const windowsUser = rawUser.includes('\\') ? rawUser.split('\\').pop() : rawUser;
 
   if (!adEnabled) {
     req.windowsUser = windowsUser || 'unknown';
+    req.userRole = ROLES.ADMIN;
+    req.userRoleName = 'ADMIN';
     return next();
   }
 
@@ -154,23 +162,25 @@ function adAuthMiddleware(req, res, next) {
     });
   }
 
-  isUserAllowed(windowsUser)
-    .then(allowed => {
-      if (allowed) {
+  getUserRole(windowsUser)
+    .then(role => {
+      if (role > 0) {
         req.windowsUser = windowsUser;
+        req.userRole = role;
+        req.userRoleName = getRoleName(role);
         next();
       } else {
+        const allGroups = Object.keys(roleGroupMap);
         res.status(403).json({
-          message: `Access denied. ${windowsUser} is not in an authorized security group.`,
+          message: 'Access denied. ' + windowsUser + ' is not in an authorized security group.',
           code: 'NOT_IN_GROUP',
           user: windowsUser,
-          requiredGroups: allowedGroups,
+          requiredGroups: allGroups,
         });
       }
     })
     .catch(err => {
       console.error('[AD] Middleware error:', err.message);
-      // On AD failure, deny access (fail closed)
       res.status(503).json({
         message: 'Unable to verify access. Active Directory may be unreachable.',
         code: 'AD_ERROR',
@@ -178,10 +188,9 @@ function adAuthMiddleware(req, res, next) {
     });
 }
 
-// ─── Clear Cache (for testing) ───
-
+// ─── Clear Cache ───
 function clearCache() {
-  membershipCache.clear();
+  roleCache.clear();
 }
 
 module.exports = { initAD, adAuthMiddleware, clearCache };

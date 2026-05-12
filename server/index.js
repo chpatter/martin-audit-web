@@ -25,6 +25,7 @@ const { processVariations } = require('./changes');
 const { getTableConfig } = require('./tracked-fields');
 const { loadVendors, loadCustomers, loadOperators, enrichChanges, preloadCaches } = require('./lookups');
 const { initAD, adAuthMiddleware } = require('./auth-ad');
+const { maskChanges, filterTablesByRole } = require('./roles');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -323,6 +324,7 @@ app.get('/api/auth/status', async (req, res) => {
     operator: config.oper,
     cono: config.cono,
     windowsUser: req.windowsUser || null,
+    role: req.userRoleName || null,
   });
 });
 
@@ -363,8 +365,9 @@ app.get('/api/changes/po/:pono', async (req, res) => {
     console.log(`[CHANGES] PO ${pono}-${posuf}: ${poehChanges.length} header + ${poelChanges.length} line = ${allChanges.length} total`);
 
     const enriched = await enrich(allChanges);
+    const masked = maskChanges(enriched, req.userRole);
 
-    res.json({ changes: enriched, count: enriched.length, pono, posuf });
+    res.json({ changes: masked, count: masked.length, pono, posuf });
   } catch (err) {
     console.error('[CHANGES] Error:', err.message);
     res.status(500).json({ message: 'Failed to fetch changes' });
@@ -400,8 +403,9 @@ app.get('/api/changes/recent', async (req, res) => {
     if (allChanges.length > limit) allChanges = allChanges.slice(0, limit);
 
     const enriched = await enrich(allChanges);
+    const masked = maskChanges(enriched, req.userRole);
 
-    res.json({ changes: enriched, count: enriched.length, days });
+    res.json({ changes: masked, count: masked.length, days });
   } catch (err) {
     console.error('[CHANGES] Error:', err.message);
     res.status(500).json({ message: 'Failed to fetch recent changes' });
@@ -423,7 +427,10 @@ app.post('/api/changes/search', async (req, res) => {
     // Reset cancel flag for new search
     compass.resetCancel();
 
-    const tables = source ? [source.toLowerCase()] : (requestedTables || ['poeh', 'poel']);
+    const tables = filterTablesByRole(
+      source ? [source.toLowerCase()] : (requestedTables || ['poeh', 'poel']),
+      req.userRole
+    );
     let allChanges = [];
 
     if (ponos && ponos.length > 0) {
@@ -469,8 +476,9 @@ app.post('/api/changes/search', async (req, res) => {
     console.log(`[CHANGES] Search returned ${allChanges.length} changes`);
 
     const enriched = await enrich(allChanges);
+    const masked = maskChanges(enriched, req.userRole);
 
-    res.json({ changes: enriched, count: enriched.length });
+    res.json({ changes: masked, count: masked.length });
   } catch (err) {
     console.error('[CHANGES] Search error:', err.message);
     res.status(500).json({ message: 'Search failed. Please try again.' });

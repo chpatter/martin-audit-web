@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTheme } from './config/ThemeContext';
 import MODULES from './config/modules';
 import { GlowDot, Badge } from './components/UI';
@@ -15,11 +15,22 @@ import PricingVendPage from './pages/PricingVendPage';
 import VendorsPage from './pages/VendorsPage';
 import SecurityPage from './pages/SecurityPage';
 
+// Security module is admin-only
+const ADMIN_ONLY_MODULES = ['security'];
+
+function getVisibleModules(role) {
+  return MODULES.filter(m => {
+    if (!m.active) return false;
+    if (ADMIN_ONLY_MODULES.includes(m.id) && role !== 'ADMIN') return false;
+    return true;
+  });
+}
+
 // ─── Dashboard Landing Page ───
 
-function DashboardPage({ onNavigate }) {
+function DashboardPage({ onNavigate, userRole }) {
   const { theme } = useTheme();
-  const activeModules = MODULES.filter(m => m.active);
+  const visibleModules = useMemo(() => getVisibleModules(userRole), [userRole]);
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto' }}>
@@ -36,7 +47,7 @@ function DashboardPage({ onNavigate }) {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gap: 16,
       }}>
-        {activeModules.map(m => (
+        {visibleModules.map(m => (
           <button
             key={m.id}
             onClick={() => onNavigate(m.id)}
@@ -66,6 +77,14 @@ function DashboardPage({ onNavigate }) {
   );
 }
 
+// Role badge colors
+const ROLE_COLORS = {
+  USERS: '#3b82f6',
+  FINANCE: '#f59e0b',
+  SENSITIVE: '#ef4444',
+  ADMIN: '#10b981',
+};
+
 // ─── Main App ───
 
 export default function App() {
@@ -74,6 +93,8 @@ export default function App() {
   const [connectionInfo, setConnectionInfo] = useState(null);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const userRole = connectionInfo?.role || 'USERS';
 
   function handleConnected(info) {
     setConnectionInfo(info);
@@ -105,7 +126,9 @@ export default function App() {
     security: SecurityPage,
   };
 
-  const ActivePage = PAGE_MAP[activeModule];
+  // Prevent non-admins from accessing security even via direct state
+  const ActivePage = ADMIN_ONLY_MODULES.includes(activeModule) && userRole !== 'ADMIN'
+    ? null : PAGE_MAP[activeModule];
 
   return (
     <div style={{
@@ -119,6 +142,7 @@ export default function App() {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         connectionInfo={connectionInfo}
         onSignOut={handleSignOut}
+        userRole={userRole}
       />
 
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -137,15 +161,17 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <GlowDot color={theme.colors.success} />
             <span style={{ fontSize: 11, color: theme.colors.textMuted }}>
-              {connectionInfo?.windowsUser
-                ? `${connectionInfo.windowsUser} · ${connectionInfo.operator || 'Cono ' + (connectionInfo.cono || '1')}`
-                : `${connectionInfo?.operator || 'Connected'} · Cono ${connectionInfo?.cono || '1'}`
-              }
+              {connectionInfo?.windowsUser || connectionInfo?.operator || 'Connected'}
+            </span>
+            <span style={{
+              fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+              background: ROLE_COLORS[userRole] || '#666', color: '#fff', letterSpacing: '0.05em',
+            }}>
+              {userRole}
             </span>
             <span style={{ fontSize: 11, color: theme.colors.textMuted }}>|</span>
             <span style={{ fontSize: 11, color: theme.colors.textMuted }}>
-              {new Date().toLocaleDateString('en-US')}{' '}
-              {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              Cono {connectionInfo?.cono || '1'}
             </span>
             <button onClick={handleSignOut} style={{
               padding: '6px 12px', background: 'transparent',
@@ -160,7 +186,7 @@ export default function App() {
 
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
-          {activeModule === 'dashboard' && <DashboardPage onNavigate={setActiveModule} />}
+          {activeModule === 'dashboard' && <DashboardPage onNavigate={setActiveModule} userRole={userRole} />}
           {ActivePage && <ActivePage />}
         </div>
       </div>
