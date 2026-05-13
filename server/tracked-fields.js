@@ -66,13 +66,13 @@ const TRACKED_FIELDS = {
   // ─── Purchases ───
 
   poeh: {
-    stagecd:    { label: 'Stage Code', desc: 'the stage of the PO. Content: 0 - Entered, 1 - Ordered, 2 - Printed, 3 - Acknowledged, 4 - Pre-receiving, 5 - Received, 6 - Costed, 7 - Closed, 9 - Cancelled' },
+    stagecd:    { label: 'Stage Code', desc: 'the stage of the PO. Content: 0 - Entered, 1 - Ordered, 2 - Printed, 3 - Acknowledged, 5 - Received, 7 - Costed, 9 - Closed' },
     approvty:   { label: 'Approval', desc: '(Y)es, (N)o or Any Other Character for Hold' },
-    duedt:      { label: 'Due Date', desc: 'Due date' },
+    duedt:      { label: 'Due Date', desc: 'Category In' },
     expshipdt:  { label: 'Expected Ship Date', desc: 'Expected ship date' },
-    reqshipdt:  { label: 'Requested Ship Date', desc: 'Requested Ship Date is the date that you have requested the product from the vendor' },
-    frttermscd: { label: 'Freight Terms', desc: 'Validated against valid SASTA value - codeiden FT' },
-    termstype:  { label: 'Terms Type', desc: 'Default terms comes from apsv.termstype. Value is set up in the SASTT function or SASTA table where codeiden = T' },
+    reqshipdt:  { label: 'Requested Ship Date', desc: 'Requested Ship Date is the date that you have requested the shipment' },
+    frttermscd: { label: 'Freight Terms', desc: 'Freight Terms. Content: Validated against valid SASTA value - carrier freight terms' },
+    termstype:  { label: 'Terms Type', desc: 'Default terms comes from apsv.termstype. Value is set up in the Terms table' },
     shipviaty:  { label: 'Ship Via', desc: 'Ship via type' },
     buyer:      { label: 'Buyer', desc: 'Buyer operator code' },
     whse:       { label: 'Warehouse', desc: 'Warehouse ID' },

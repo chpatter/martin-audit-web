@@ -137,16 +137,54 @@ async function getUserRole(username) {
   return highestRole;
 }
 
+// ─── NTLM Username Extraction ───
+// When IIS proxies via ARR, the {LOGON_USER} variable is empty because
+// rewrite runs before auth completes. But the Authorization: Negotiate header
+// contains the NTLM Type 3 message with the username embedded.
+
+function extractNtlmUsername(authHeader) {
+  if (!authHeader) return '';
+  try {
+    // Strip "Negotiate " or "NTLM " prefix
+    const token = authHeader.replace(/^(Negotiate|NTLM)\s+/i, '');
+    const buf = Buffer.from(token, 'base64');
+
+    // NTLM Type 3 message starts with "NTLMSSP\0" and has type 3 at offset 8
+    if (buf.length < 32) return '';
+    const sig = buf.toString('ascii', 0, 7);
+    if (sig !== 'NTLMSSP') return '';
+    const msgType = buf.readUInt32LE(8);
+    if (msgType !== 3) return ''; // Only Type 3 has the username
+
+    // Username is at: length at offset 36, offset at offset 40
+    const userLen = buf.readUInt16LE(36);
+    const userOffset = buf.readUInt32LE(40);
+
+    if (userOffset + userLen > buf.length) return '';
+    // Username is UTF-16LE encoded
+    const username = buf.toString('utf16le', userOffset, userOffset + userLen);
+    return username;
+  } catch {
+    return '';
+  }
+}
+
 // ─── Express Middleware ───
 
 function adAuthMiddleware(req, res, next) {
   // Skip auth for health endpoint
   if (req.path === '/api/health') return next();
 
-  // IIS passes the authenticated Windows user via header.
-  // Format is typically DOMAIN\username — extract just the username.
-  const rawUser = req.headers['x-iis-windowsauthuser'] || req.headers['x-windows-user'] || '';
+  // Try multiple sources for the Windows username:
+  // 1. IIS server variable header (works when rewrite runs after auth)
+  // 2. NTLM token from Authorization header (fallback for ARR proxy)
+  const rawUser = req.headers['x-iis-windowsauthuser']
+    || req.headers['x-windows-user']
+    || extractNtlmUsername(req.headers['authorization'])
+    || '';
   const windowsUser = rawUser.includes('\\') ? rawUser.split('\\').pop() : rawUser;
+
+  console.log('[AD] Identified user:', windowsUser || '(empty)');
 
   if (!adEnabled) {
     req.windowsUser = windowsUser || 'unknown';

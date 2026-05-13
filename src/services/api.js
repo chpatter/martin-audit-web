@@ -21,7 +21,9 @@ class ApiError extends Error {
 }
 
 async function get(endpoint) {
-  const res = await fetch(`${API_BASE}${endpoint}`);
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    credentials: 'include',
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new ApiError(err.message || `Failed: ${res.status}`, res.status, err);
@@ -33,6 +35,7 @@ async function post(endpoint, body = {}) {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(body),
   });
   if (!res.ok) {
