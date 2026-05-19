@@ -158,7 +158,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            {isDark ? '☀' : '🌙'}
+            {isDark ? '🔆' : '🌙'}
           </button>
         ) : (
           <>
@@ -171,7 +171,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
                 fontSize: 11, cursor: 'pointer', fontFamily: theme.fonts.body,
               }}
             >
-              {isDark ? '☀ LIGHT MODE' : '🌙 DARK MODE'}
+              {isDark ? '🔆 LIGHT MODE' : '🌙 DARK MODE'}
             </button>
             <div
               style={{
