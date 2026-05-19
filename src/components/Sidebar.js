@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../config/ThemeContext';
 import MODULES from '../config/modules';
 
-export default function Sidebar({ activeModule, onModuleChange, collapsed, onToggle, connectionInfo, onSignOut, userRole }) {
+export default function Sidebar({ activeModule, onModuleChange, collapsed, onToggle, connectionInfo, userRole }) {
   const { theme, isDark, toggleTheme } = useTheme();
   const ADMIN_ONLY_MODULES = ['security'];
   const visibleModules = MODULES.filter(m => {

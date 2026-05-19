@@ -101,12 +101,6 @@ export default function App() {
     setScreen('main');
   }
 
-  function handleSignOut() {
-    setScreen('login');
-    setConnectionInfo(null);
-    setActiveModule('dashboard');
-  }
-
   if (screen === 'login') {
     return <LoginPage onConnected={handleConnected} />;
   }
@@ -141,7 +135,6 @@ export default function App() {
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         connectionInfo={connectionInfo}
-        onSignOut={handleSignOut}
         userRole={userRole}
       />
 
@@ -158,7 +151,7 @@ export default function App() {
             </h2>
             {currentModule?.badge && <Badge variant="warning">{currentModule.badge}</Badge>}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <GlowDot color={theme.colors.success} />
             <span style={{ fontSize: 11, color: theme.colors.textMuted }}>
               {connectionInfo?.windowsUser || connectionInfo?.operator || 'Connected'}
@@ -169,18 +162,6 @@ export default function App() {
             }}>
               {userRole}
             </span>
-            <span style={{ fontSize: 11, color: theme.colors.textMuted }}>|</span>
-            <span style={{ fontSize: 11, color: theme.colors.textMuted }}>
-              Cono {connectionInfo?.cono || '1'}
-            </span>
-            <button onClick={handleSignOut} style={{
-              padding: '6px 12px', background: 'transparent',
-              border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
-              color: theme.colors.textMuted, fontSize: 11, cursor: 'pointer',
-              fontFamily: theme.fonts.body,
-            }}>
-              SIGN OUT
-            </button>
           </div>
         </div>
 
