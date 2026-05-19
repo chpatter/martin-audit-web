@@ -1,0 +1,14 @@
+# iisnode configuration
+# promoteServerVars makes IIS server variables available as request headers
+# AUTH_USER becomes req.headers['x-iisnode-auth_user'] in Node.js
+promoteServerVars: AUTH_USER
+
+# Logging (set to true for debugging, false for production)
+loggingEnabled: false
+devErrorsEnabled: false
+
+# Recycling — restart Node.js if it crashes
+recycleSignalEnabled: true
+
+# Watch for file changes (disable in production)
+nodeProcessCountPerApplication: 1

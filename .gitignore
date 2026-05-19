@@ -23,3 +23,4 @@ server/*.db-shm
 .DS_Store
 npm-debug.log*
 yarn-debug.log*
+iisnode/
