@@ -1,49 +1,40 @@
-# ▶ Martin Audit System — Web Edition
+# ▶ Martin Audit System
 
 **CloudSuite Distribution Audit Log Viewer** — An internal web application that tracks field-level changes across 10 modules in Infor CloudSuite SXe. Built to replace Agile Dragon's Dragon Pack Audit.
 
-Users open a browser, navigate to the server URL, and Windows Authentication handles the rest — no login screen, no credentials to manage.
+Users browse to `https://audit.martinsupply.com` and Windows SSO handles the rest — no login screen, no credentials, no installs.
 
 ## Architecture
 
 ```
-User's Browser                 Company Server (VM / IIS)     Infor CloudSuite
-┌────────────────────┐       ┌──────────────────────┐     ┌────────────────┐
-│  Browser           │──────▶│  IIS                 │────▶│  Data Lake     │
-│  (Edge/Chrome)     │ HTTPS │  ├─ Windows Auth     │     │  (Compass)     │
-│                    │       │  ├─ React build/      │     │                │
-│  • No install      │       │  └─ Reverse proxy ──▶│     │  • mingle-sso  │
-│  • No credentials  │       │     Node.js backend  │     │    (auth)      │
-│  • Windows SSO     │       │     (port 3001)      │     │  • mingle-ion  │
-│                    │       │                      │     │    (Compass)   │
-│                    │       │  • OAuth2 auth       │     │                │
-│                    │       │  • AD group checks   │     │                │
-│                    │       │  • Compass queries   │     │                │
-│                    │       │  • Name enrichment   │     │                │
-└────────────────────┘       └──────────────────────┘     └────────────────┘
+User's Browser                 Company Server (25MARTINAPP01)     Infor CloudSuite
+┌────────────────────┐       ┌───────────────────────────┐     ┌────────────────┐
+│  Browser           │──────▶│  IIS                      │────▶│  Data Lake     │
+│  (Edge/Chrome)     │ HTTPS │  ├─ Windows Auth (SSO)    │     │  (Compass)     │
+│                    │       │  ├─ Static files (build/)  │     │                │
+│  • No install      │       │  └─ iisnode ──▶ Node.js   │     │  • mingle-sso  │
+│  • No credentials  │       │                           │     │    (auth)      │
+│  • Windows SSO     │       │  • OAuth2 → Infor         │     │  • mingle-ion  │
+│                    │       │  • AD group → role check   │     │    (Compass)   │
+│                    │       │  • Field masking by role   │     │                │
+│                    │       │  • Compass queries         │     │                │
+└────────────────────┘       └───────────────────────────┘     └────────────────┘
 ```
 
-No credentials, no application code, and no Infor access lives on user machines. Everything runs on the server. IIS handles Windows Authentication — the browser sends Kerberos/NTLM credentials automatically, IIS validates them, and passes the verified username to the Node.js backend.
+IIS handles authentication via Kerberos/NTLM, serves the React frontend as static files, and routes API requests to Node.js via iisnode. Node.js runs inside the IIS process — no separate port, no PM2, no reverse proxy.
 
 ### How It Works
 
 1. **User opens the URL** — browser loads the React app from IIS
-2. **IIS authenticates** — Windows Authentication validates the user via Kerberos/NTLM (automatic, no login screen for domain-joined machines)
-3. **IIS passes identity** — sets the `X-IIS-WindowsAuthUser` header with the verified Windows username on every proxied request
-4. **AD validates access** — the backend checks if that username is in the `Martin-Audit-Users` security group
-5. **Backend authenticates to Infor** via OAuth2 service account (grant_type=password)
-6. **Queries Compass Data Lake** using `infor.allvariations('tablename')` — returns every historical version of every record
-7. **Compares consecutive versions** — for each tracked field, if the value differs between version N and version N+1, that's a change
-8. **Enriches results** — looks up vendor names, customer names, and operator names from cached arsc/apsv/sasoo data
-9. **Frontend displays** changes in a sortable, filterable table with CSV export
-
-### Why IIS + Windows Auth?
-
-- **No login screen** — domain-joined users are authenticated automatically
-- **Verified identity** — IIS validates the Windows user, not a self-reported header
-- **Audit compliance** — every request has a verified username for audit trails
-- **Security group control** — access managed through existing AD infrastructure
-- **HTTPS** — IIS handles TLS certificates
+2. **IIS authenticates** — Windows Auth validates the user via Kerberos/NTLM (automatic SSO on domain-joined machines)
+3. **iisnode passes identity** — the verified `AUTH_USER` is promoted to a request header that Node.js reads
+4. **AD validates access** — the backend checks which AD security groups the user belongs to and assigns a role tier
+5. **Role-based field masking** — sensitive fields (pricing, banking, tax IDs) are replaced with `●●●●●●` server-side based on the user's role. Masked data never reaches the browser.
+6. **Backend authenticates to Infor** via OAuth2 service account (grant_type=password)
+7. **Queries Compass Data Lake** using `infor.allvariations('tablename')` — returns every historical version of every record
+8. **Compares consecutive versions** — for each tracked field, if the value differs between version N and version N+1, that's a change
+9. **Enriches results** — looks up vendor names, customer names, and operator names from cached arsc/apsv/sasoo data
+10. **Frontend displays** changes in a sortable, filterable table with CSV export
 
 ## Modules
 
@@ -56,19 +47,28 @@ No credentials, no application code, and no Infor access lives on user machines.
 | **Pricing-Vendor** | PDSV | 44 | Vendor cost agreements and pricing |
 | **Prod/Whse** | ICSP, ICSW | 12 + 20 | Product master and warehouse-level settings |
 | **Purchases** | POEH, POEL | 33 + 20 | Purchase order headers and lines — stage, dates, costs, quantities |
-| **Security** | SASOO, PV_USER, PV_SECURE, AUTHSECURE | 90 + 46 + 3 + 10 | Operator permissions, function security, auth settings |
+| **Security** | SASOO, PV_USER, PV_SECURE, AUTHSECURE | 90 + 46 + 3 + 10 | Operator permissions, function security (Admin only) |
 | **Transfers** | WTEH, WTEL | 9 + 11 | Warehouse transfer headers and lines |
 | **Vendors** | APSV, APSS | 63 + 47 | Vendor master and ship-from records — banking, 1099, freight, terms |
 
 ### Tracked Fields
 
-Each table has a curated list of fields the app monitors for changes, defined in `server/tracked-fields.js`. Fields were selected by comparing against Agile Dragon's output plus additional fields identified as valuable from the raw Compass data.
+Each table has a curated list of fields the app monitors for changes, defined in `server/tracked-fields.js`. To add a new tracked field, add it to the appropriate table's object — the comparison engine picks it up automatically. No other code changes needed.
 
-Every tracked field includes a human-readable **label** (e.g., "Stage Code") and a **description** explaining what the field means (e.g., "0 = Quoted, 1 = Ordered, 2 = Picked...").
+## Role-Based Access Control
 
-To add a new tracked field, add it to the appropriate table's object in `server/tracked-fields.js`. No other code changes needed — the comparison engine picks it up automatically.
+Access is controlled by AD security groups. Users get the highest role from all groups they belong to. Each tier includes everything below it.
 
-## Quick Start (Development)
+| AD Group | Role | Modules | Fields Visible |
+|----------|------|---------|---------------|
+| Martin-Audit-Users | USERS | 9 (no Security) | Operational — dates, stages, addresses, quantities, names, reps, warehouses |
+| Martin-Audit-Finance | FINANCE | 9 (no Security) | + pricing, costs, margins, credit limits, discounts, rebates |
+| Martin-Audit-Sensitive | SENSITIVE | 9 (no Security) | + bank accounts, routing numbers, tax IDs, 1099 info |
+| Martin-Audit-Admin | ADMIN | All 10 | Everything unmasked, including Security module |
+
+Masking is server-side — masked field values are replaced with `●●●●●●` before the response is sent. The real data never reaches the browser. There is nothing to unredact on the client side.
+
+## Quick Start (Local Development)
 
 ### Prerequisites
 
@@ -76,13 +76,9 @@ To add a new tracked field, add it to the appropriate table's object in `server/
 
 ### 1. Install Dependencies
 
-```bash
+```powershell
 cd martin-audit-web
-
-# Frontend dependencies
 npm install
-
-# Backend dependencies
 cd server
 npm install
 cd ..
@@ -90,16 +86,16 @@ cd ..
 
 ### 2. Configure Backend
 
-```bash
-cd server
-copy .env.example .env
+```powershell
+copy server\.env.example server\.env
+notepad server\.env
 ```
 
-Edit `server/.env` with your Infor OAuth2 credentials and AD settings. See the Environment Variables section below.
+Fill in your Infor OAuth2 credentials. Set `AD_ENABLED=false` for local development.
 
 ### 3. Run Locally
 
-```bash
+```powershell
 # Terminal 1: Backend
 cd server
 npm start
@@ -109,52 +105,50 @@ cd ..
 npm start
 ```
 
-Opens at `http://localhost:3000`. In development, the React proxy forwards `/api` requests to port 3001 automatically.
+Opens at `http://localhost:3000`. The React proxy forwards `/api` requests to port 3001 automatically.
 
-**Note:** Windows Authentication doesn't apply in local dev — AD checks use the `X-Windows-User` header fallback. Set `AD_ENABLED=false` in `server/.env` for local development.
+## Production Deployment (IIS + iisnode)
 
-## Deployment (IIS on Windows Server)
+### Server Info
+
+- **Server:** 25MARTINAPP01
+- **URL:** https://audit.martinsupply.com
+- **App Path:** C:\inetpub\martin-audit-app
+- **IIS Site:** Martin Audit (port 443, HTTPS)
 
 ### Prerequisites
 
-Install these on the Windows Server VM:
-- **Node.js 18+**
-- **IIS** with these features enabled:
-  - URL Rewrite Module ([download](https://www.iis.net/downloads/microsoft/url-rewrite))
-  - Application Request Routing (ARR) ([download](https://www.iis.net/downloads/microsoft/application-request-routing))
-  - Windows Authentication (Server Manager → Add Roles → Web Server → Security → Windows Authentication)
-- **PM2** — `npm install -g pm2` — for Node.js process management
+Install on the Windows Server VM:
+- **Node.js 18+** — https://nodejs.org
+- **Git** — https://git-scm.com/download/win
+- **IIS** with Windows Authentication enabled
+- **URL Rewrite Module** — https://www.iis.net/downloads/microsoft/url-rewrite
+- **iisnode** — https://github.com/azure/iisnode/releases (x64 MSI)
+
+ARR (Application Request Routing) and PM2 are NOT needed.
 
 ### 1. Deploy the Code
 
 ```powershell
-# Clone the repo on the VM
-git clone https://github.com/chpatter/martin-audit-web.git C:\inetpub\martin-audit
-cd C:\inetpub\martin-audit
-
-# Install dependencies
+git clone https://github.com/chpatter/martin-audit-web.git C:\inetpub\martin-audit-app
+cd C:\inetpub\martin-audit-app
 npm install
 cd server
 npm install
 cd ..
-
-# Build the React frontend
 npm run build
-
-# Copy web.config into the build output
-copy web.config build\web.config
 ```
+
+No `copy web.config` step needed — `web.config` lives at the project root.
 
 ### 2. Configure the Backend
 
 ```powershell
 copy server\.env.example server\.env
+notepad server\.env
 ```
 
-Edit `server\.env`:
 ```
-PORT=3001
-
 # Infor CloudSuite OAuth2
 INFOR_TENANT_ID=your_tenant_id
 INFOR_SSO_BASE=https://mingle-sso.inforcloudsuite.com
@@ -167,7 +161,7 @@ INFOR_CONO=1
 INFOR_OPER=MAUD
 
 # CORS
-ALLOWED_ORIGINS=https://audit.martin.local
+ALLOWED_ORIGINS=https://audit.martinsupply.com
 
 # Active Directory
 AD_ENABLED=true
@@ -175,44 +169,25 @@ AD_URL=ldap://16DCFLORENCE.martin.local
 AD_BASE_DN=DC=martin,DC=local
 AD_USERNAME=MartinAudit@martin.local
 AD_PASSWORD=your-ad-service-account-password
-AD_ALLOWED_GROUPS=Martin-Audit-Users
+AD_GROUP_USERS=Martin-Audit-Users
+AD_GROUP_FINANCE=Martin-Audit-Finance
+AD_GROUP_SENSITIVE=Martin-Audit-Sensitive
+AD_GROUP_ADMIN=Martin-Audit-Admin
 ```
 
-### 3. Start the Backend with PM2
+### 3. Configure IIS
 
+**Unlock handlers (one-time, Admin PowerShell):**
 ```powershell
-cd server
-pm2 start index.js --name martin-audit-api
-pm2 save
-pm2 startup
+C:\Windows\System32\inetsrv\appcmd.exe unlock config -section:system.webServer/handlers
 ```
-
-### 4. Configure IIS
-
-**Enable ARR Proxy:**
-1. Open IIS Manager
-2. Click the server name (top level)
-3. Double-click Application Request Routing Cache
-4. Click Server Proxy Settings
-5. Check Enable proxy
-6. Click Apply
-
-**Allow server variables for reverse proxy:**
-1. Open IIS Manager
-2. Click the server name
-3. Double-click URL Rewrite
-4. Click View Server Variables (right panel)
-5. Add these three:
-   - `HTTP_X_IIS_WINDOWSAUTHUSER`
-   - `HTTP_X_FORWARDED_FOR`
-   - `HTTP_X_FORWARDED_PROTO`
 
 **Create the IIS site:**
-1. Right-click Sites → Add Website
-2. Site name: `Martin Audit`
-3. Physical path: `C:\inetpub\martin-audit\build`
-4. Binding: HTTPS, port 443, hostname `audit.martin.local`
-5. SSL certificate: select your internal cert (from AD Certificate Authority)
+1. Open IIS Manager (`C:\Windows\System32\inetsrv\InetMgr.exe`)
+2. Right-click Sites → Add Website
+3. Site name: `Martin Audit`
+4. Physical path: `C:\inetpub\martin-audit-app` (project root, NOT build/)
+5. Binding: HTTPS, port 443, hostname `audit.martinsupply.com`, select SSL certificate
 6. Click OK
 
 **Configure Authentication:**
@@ -221,35 +196,69 @@ pm2 startup
 3. **Disable** Anonymous Authentication
 4. **Enable** Windows Authentication
 
-**Add DNS record:**
-- In your DNS server, create an A record pointing `audit.martin.local` to the VM's IP address
-
-### 5. Verify
-
-1. Browse to `https://audit.martin.local` from a domain-joined machine
-2. You should see the app load with no login screen
-3. Check the header bar — it should show your Windows username
-4. If you get "Access Denied", add yourself to the `Martin-Audit-Users` AD group
-
-### 6. Updating the App
-
-**Frontend changes:**
+**Set folder permissions:**
 ```powershell
-cd C:\inetpub\martin-audit
+icacls "C:\inetpub\martin-audit-app" /grant "IIS AppPool\Martin Audit:(OI)(CI)M" /T
+```
+
+**Enable loopback auth (for testing from the VM itself):**
+```powershell
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0" -Name "BackConnectionHostNames" -Value "audit.martinsupply.com" -PropertyType MultiString -Force
+```
+
+**Restart IIS:**
+```powershell
+iisreset
+```
+
+### 4. Verify
+
+Browse to `https://audit.martinsupply.com` — should SSO straight in on domain-joined machines (once the Intranet zone GPO is pushed). The header bar shows the Windows username and role badge.
+
+### 5. DNS and SSL
+
+Managed by the infrastructure team:
+- **DNS A record:** `audit.martinsupply.com` → VM IP (10.100.1.148)
+- **SSL certificate:** Internal wildcard cert bound to the IIS site on port 443
+
+### 6. SSO (No Sign-in Prompt)
+
+Domain-joined machines auto-send Windows credentials when the site is in the Local Intranet zone. Push via Group Policy:
+- **GPO path:** Computer Configuration → Administrative Templates → Microsoft Edge → HTTP Authentication → Auth Server Allowlist
+- **Value:** `https://audit.martinsupply.com`
+
+Without the GPO, users get a one-time Windows login prompt (which works, just not seamless).
+
+## Deploying Updates
+
+**Frontend-only changes:**
+```powershell
+cd C:\inetpub\martin-audit-app
 git pull
 npm run build
-copy web.config build\web.config
 ```
 
 **Backend changes:**
 ```powershell
-cd C:\inetpub\martin-audit
+cd C:\inetpub\martin-audit-app
 git pull
-cd server
-pm2 restart martin-audit-api
+iisreset
 ```
 
-Users get updates on their next browser refresh.
+**Both:**
+```powershell
+cd C:\inetpub\martin-audit-app
+git pull
+npm run build
+iisreset
+```
+
+**Development workflow:**
+1. Edit code on your local machine
+2. Test with `npm start` locally
+3. Commit and push to GitHub
+4. On the VM: `git pull`, build, `iisreset`
+5. Users get updates on next browser refresh
 
 ## Environment Variables
 
@@ -257,7 +266,6 @@ Users get updates on their next browser refresh.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `PORT` | No | Backend port (default: 3001) |
 | `INFOR_TENANT_ID` | Yes | Infor CloudSuite tenant identifier |
 | `INFOR_SSO_BASE` | Yes | Infor SSO auth URL |
 | `INFOR_ION_BASE` | Yes | Infor ION API base URL |
@@ -268,23 +276,27 @@ Users get updates on their next browser refresh.
 | `INFOR_CONO` | No | Company number (default: 1) |
 | `INFOR_OPER` | Yes | SXe operator code (e.g., `MAUD`) |
 | `ALLOWED_ORIGINS` | No | CORS allowed origins (default: `http://localhost:3000`) |
-| `AD_ENABLED` | No | Enable AD auth (default: `false`) |
+| `AD_ENABLED` | No | Enable AD auth (default: `false` — all users get Admin) |
 | `AD_URL` | When AD enabled | LDAP URL (e.g., `ldap://16DCFLORENCE.martin.local`) |
 | `AD_BASE_DN` | When AD enabled | Domain base DN (e.g., `DC=martin,DC=local`) |
 | `AD_USERNAME` | When AD enabled | AD service account (e.g., `MartinAudit@martin.local`) |
 | `AD_PASSWORD` | When AD enabled | AD service account password |
-| `AD_ALLOWED_GROUPS` | When AD enabled | Comma-separated security groups |
+| `AD_GROUP_USERS` | When AD enabled | AD group for Users role |
+| `AD_GROUP_FINANCE` | When AD enabled | AD group for Finance role |
+| `AD_GROUP_SENSITIVE` | When AD enabled | AD group for Sensitive role |
+| `AD_GROUP_ADMIN` | When AD enabled | AD group for Admin role |
 
 ## Security
 
-- **IIS Windows Authentication** — Kerberos/NTLM, verified user identity on every request
-- **AD security groups** — group-based access control with 15-minute membership cache, fail-closed
-- **HTTPS** — IIS handles TLS; all traffic encrypted
-- **Helmet** — HTTP security headers (X-Frame-Options, HSTS, etc.)
+- **IIS Windows Authentication** — Kerberos/NTLM SSO, verified user identity on every request
+- **iisnode** — Node.js runs inside IIS, auth is completed before code executes
+- **Role-based field masking** — sensitive values replaced server-side based on AD group membership
+- **AD security groups** — four-tier access control with 15-minute membership cache, fail-closed
+- **HTTPS** — IIS handles TLS via internal wildcard certificate
+- **Helmet** — HTTP security headers (X-Frame-Options, CSP, HSTS, etc.)
 - **Rate limiting** — 100 requests per minute per IP
 - **Input sanitization** — all user inputs sanitized before Compass SQL queries
 - **Error sanitization** — internal errors logged server-side, never sent to clients
-- **CORS restriction** — only configured origins can call the backend
 - **SXe proxy whitelisting** — only approved endpoint paths are proxied
 - **Credential isolation** — all secrets in `server/.env` on the VM, never in client code
 
@@ -293,7 +305,7 @@ Users get updates on their next browser refresh.
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/health` | Server status — uptime and auth state |
-| `GET` | `/api/auth/status` | Infor connection status — operator, cono, Windows user |
+| `GET` | `/api/auth/status` | Connection status — operator, Windows user, role |
 | `POST` | `/api/auth/reconnect` | Force re-authentication to Infor |
 | `GET` | `/api/changes/po/:pono` | All POEH + POEL changes for a specific PO |
 | `GET` | `/api/changes/recent` | Recent changes (default: last 7 days) |
@@ -353,8 +365,8 @@ martin-audit-web/
 │   │   ├── ExpandedRow.js   # Expanded row detail view
 │   │   ├── FilterBar.js     # Search bar — record #, source, warehouse, dates
 │   │   ├── MultiSelect.js   # Multi-select dropdown for column filters
-│   │   ├── PODetail.js      # PO detail drawer with timeline and costing tabs
-│   │   ├── ResultFilters.js # Column filter dropdowns (post-search, client-side)
+│   │   ├── PODetail.js      # PO detail drawer
+│   │   ├── ResultFilters.js # Column filter dropdowns (client-side)
 │   │   ├── Sidebar.js       # Navigation sidebar with module list and theme toggle
 │   │   ├── StatsBar.js      # Summary bar showing change counts by source table
 │   │   └── UI.js            # Shared primitives (Badge, GlowDot, StageBadge)
@@ -373,58 +385,60 @@ martin-audit-web/
 │   │   ├── PricingVendPage.js # PDSV vendor pricing changes
 │   │   ├── ProdWhsePage.js  # ICSP + ICSW product/warehouse changes
 │   │   ├── PurchasesPage.js # POEH + POEL purchase order changes
-│   │   ├── SecurityPage.js  # SASOO + PV_USER + PV_SECURE + AUTHSECURE
+│   │   ├── SecurityPage.js  # SASOO + PV_USER + PV_SECURE + AUTHSECURE (Admin only)
 │   │   ├── TransfersPage.js # WTEH + WTEL warehouse transfer changes
 │   │   └── VendorsPage.js   # APSV + APSS vendor changes
 │   ├── services/
-│   │   └── api.js           # API client — relative /api paths, IIS handles auth
+│   │   └── api.js           # API client — relative /api paths
 │   ├── utils/
 │   │   └── format.js        # Date/time formatting helpers
-│   ├── App.js               # Main app — dashboard, routing, header
+│   ├── App.js               # Main app — dashboard, routing, header, role filtering
 │   └── index.js             # React entry point, ThemeProvider wrapper
 ├── server/
 │   ├── index.js             # Express server — auth, queries, rate limiting, proxy
-│   ├── auth-ad.js           # AD middleware — reads IIS Windows Auth header, LDAP group checks
+│   ├── auth-ad.js           # AD middleware — reads iisnode auth header, LDAP group checks
 │   ├── changes.js           # Change detection engine — compares record versions
 │   ├── compass.js           # Compass Data Lake client — submit, poll, fetch
 │   ├── lookups.js           # Name enrichment — caches vendor/customer/operator names
+│   ├── roles.js             # RBAC — role definitions, field masking rules, table filtering
 │   ├── tracked-fields.js    # Field registry — 19 tables, 763 tracked fields
 │   ├── package.json         # Backend dependencies
 │   └── .env.example         # Backend environment template
-├── web.config               # IIS config — Windows Auth, SPA fallback, API reverse proxy
-├── .env.example             # Frontend environment template (dev only)
-├── .gitignore               # Ignores .env, node_modules, build
+├── web.config               # IIS config — iisnode handler, SPA routing, static files
+├── iisnode.yml              # iisnode settings — promotes AUTH_USER to Node.js
+├── .gitignore               # Ignores .env, node_modules, build, iisnode logs
 ├── package.json             # Frontend dependencies and scripts
 └── README.md
 ```
 
-## Scripts
+## Service Accounts
 
-| Script | What It Does |
-|--------|-------------|
-| `npm start` | React dev server at localhost:3000 |
-| `npm run build` | Build React for production (output in `build/`) |
-| `npm test` | Run tests |
+| Account | Purpose | Credentials Location |
+|---------|---------|---------------------|
+| MAUD (SXe operator) | Queries Compass Data Lake and SXe REST APIs. Read-only. | `server/.env` (INFOR_*) |
+| MartinAudit@martin.local | LDAP queries to check AD group membership. Default domain read access. | `server/.env` (AD_*) |
+
+## Credential Rotation
+
+**Infor:** Regenerate OAuth2 credentials in ION API portal, update `server/.env`, run `iisreset`.
+
+**Active Directory:** Reset the MartinAudit password in ADUC, update `server/.env`, run `iisreset`.
 
 ## Tech Stack
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
 | Frontend | React 18 | UI framework |
-| Styling | Inline styles + theme tokens | Dark/light mode, no CSS build step |
+| Styling | Inline styles + theme tokens | Dark/light mode |
 | Backend | Express.js | API server |
-| Web Server | IIS | Static files, Windows Auth, reverse proxy, HTTPS |
+| Process Host | iisnode | Runs Node.js inside IIS — no separate port or process manager |
+| Web Server | IIS | Static files, Windows Auth, HTTPS |
 | Security | helmet, express-rate-limit, input sanitization | Server hardening |
 | Auth (Infor) | OAuth2 service account (grant_type=password) | Compass and SXe API access |
-| Auth (Users) | IIS Windows Authentication + AD LDAP | Kerberos/NTLM SSO with security group control |
+| Auth (Users) | IIS Windows Authentication + AD LDAP | Kerberos/NTLM SSO with role-based access |
+| Access Control | RBAC with 4 tiers | Field-level masking by AD group membership |
 | Data | Compass Data Lake (allvariations) | Historical record versions across 19 tables |
 | Enrichment | Cached ARSC, APSV, SASOO lookups | Vendor/customer/operator display names |
-
-## Credential Rotation
-
-**Infor:** Regenerate OAuth2 credentials in ION API portal, update `server/.env`, run `pm2 restart martin-audit-api`.
-
-**Active Directory:** Reset the AD service account password, update `server/.env`, run `pm2 restart martin-audit-api`.
 
 ---
 
