@@ -26,6 +26,7 @@ const { getTableConfig } = require('./tracked-fields');
 const { loadVendors, loadCustomers, loadOperators, enrichChanges, preloadCaches } = require('./lookups');
 const { initAD, adAuthMiddleware } = require('./auth-ad');
 const { maskChanges, filterTablesByRole } = require('./roles');
+const { auditMiddleware } = require('./audit-log');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -107,6 +108,7 @@ app.use((req, res, next) => {
 // ─── Active Directory Auth ───
 initAD();
 app.use(adAuthMiddleware);
+app.use(auditMiddleware);
 
 // ─── Auth ───
 

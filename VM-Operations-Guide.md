@@ -47,6 +47,8 @@ iisreset
 | Check user auth/role | Browse to `https://audit.martinsupply.com/api/auth/status` |
 | Edit backend config | `notepad C:\inetpub\martin-audit-app\server\.env` |
 | Clear AD role cache | `iisreset` (cache resets on restart) |
+| Review today's audit log | `type C:\inetpub\martin-audit-app\server\logs\audit-YYYY-MM-DD.log` |
+| Search audit log by user | `findstr "username" C:\inetpub\martin-audit-app\server\logs\audit-*.log` |
 | Check IIS site status | `C:\Windows\System32\inetsrv\appcmd.exe list site "Martin Audit"` |
 | Open IIS Manager | `C:\Windows\System32\inetsrv\InetMgr.exe` |
 | Check Node.js version | `node --version` |
@@ -228,9 +230,43 @@ Membership cached 15 min. `iisreset` clears immediately.
 | React build | C:\inetpub\martin-audit-app\build |
 | Backend code | C:\inetpub\martin-audit-app\server |
 | Backend secrets | C:\inetpub\martin-audit-app\server\.env |
+| Audit logs | C:\inetpub\martin-audit-app\server\logs\ |
 | IIS config | C:\inetpub\martin-audit-app\web.config |
 | iisnode config | C:\inetpub\martin-audit-app\iisnode.yml |
 | iisnode logs | C:\inetpub\martin-audit-app\iisnode\ |
+
+---
+
+## Audit Logs
+
+Daily JSON-lines files at `server\logs\audit-YYYY-MM-DD.log`. Each line records who queried what and when.
+
+**Review today's log:**
+```powershell
+type C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+```
+
+**Search for a specific user:**
+```powershell
+findstr "chpatter" C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+```
+
+**Search for all searches across all dates:**
+```powershell
+findstr "search" C:\inetpub\martin-audit-app\server\logs\audit-*.log
+```
+
+**Search for a specific user across all dates:**
+```powershell
+findstr "jsmith" C:\inetpub\martin-audit-app\server\logs\audit-*.log
+```
+
+**What's logged per entry:**
+- Timestamp, username, role, action type (search/po_lookup/recent/access)
+- Search filters used (tables, record #, customer, vendor, product, dates)
+- Result count
+
+Logs rotate daily, persist until manually deleted, and are gitignored.
 
 ---
 
@@ -255,4 +291,7 @@ Start-ADSyncSyncCycle -PolicyType Delta
 
 # What's on port 443
 netstat -ano | findstr :443
+
+# Today's audit log
+type C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
 ```

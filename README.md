@@ -292,6 +292,7 @@ iisreset
 - **iisnode** — Node.js runs inside IIS, auth is completed before code executes
 - **Role-based field masking** — sensitive values replaced server-side based on AD group membership
 - **AD security groups** — four-tier access control with 15-minute membership cache, fail-closed
+- **Audit logging** — every search, lookup, and access is logged with verified username, role, query details, and timestamp
 - **HTTPS** — IIS handles TLS via internal wildcard certificate
 - **Helmet** — HTTP security headers (X-Frame-Options, CSP, HSTS, etc.)
 - **Rate limiting** — 100 requests per minute per IP
@@ -299,6 +300,36 @@ iisreset
 - **Error sanitization** — internal errors logged server-side, never sent to clients
 - **SXe proxy whitelisting** — only approved endpoint paths are proxied
 - **Credential isolation** — all secrets in `server/.env` on the VM, never in client code
+
+## Audit Log
+
+Every user action is logged to daily JSON-lines files at `server/logs/audit-YYYY-MM-DD.log`. Each line records who did what and when:
+
+```json
+{"timestamp":"2026-05-19T14:23:01.000Z","user":"chpatter","role":"USERS","action":"search","details":{"tables":["oeeh","oeel"],"pono":"10289159"},"resultCount":47}
+```
+
+**What's logged:**
+- Every search — user, role, tables queried, all search filters, result count
+- Every PO lookup — user, PO number
+- Every recent changes view — user, date range
+- Every login/access — user, role assigned
+
+**What's NOT logged:** the actual data returned — only query parameters and result count.
+
+**Reviewing logs on the VM:**
+```powershell
+# Today's log
+type C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+
+# Search for a specific user
+findstr "chpatter" C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+
+# Search for all searches across all dates
+findstr "search" C:\inetpub\martin-audit-app\server\logs\audit-*.log
+```
+
+Log files rotate daily and are gitignored. They persist on the VM until manually deleted.
 
 ## API Endpoints
 
@@ -396,12 +427,14 @@ martin-audit-web/
 │   └── index.js             # React entry point, ThemeProvider wrapper
 ├── server/
 │   ├── index.js             # Express server — auth, queries, rate limiting, proxy
+│   ├── audit-log.js         # Audit logger — daily JSON log of all user activity
 │   ├── auth-ad.js           # AD middleware — reads iisnode auth header, LDAP group checks
 │   ├── changes.js           # Change detection engine — compares record versions
 │   ├── compass.js           # Compass Data Lake client — submit, poll, fetch
 │   ├── lookups.js           # Name enrichment — caches vendor/customer/operator names
 │   ├── roles.js             # RBAC — role definitions, field masking rules, table filtering
 │   ├── tracked-fields.js    # Field registry — 19 tables, 763 tracked fields
+│   ├── logs/                # Audit logs (gitignored, auto-created)
 │   ├── package.json         # Backend dependencies
 │   └── .env.example         # Backend environment template
 ├── web.config               # IIS config — iisnode handler, SPA routing, static files

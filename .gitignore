@@ -24,3 +24,4 @@ server/*.db-shm
 npm-debug.log*
 yarn-debug.log*
 iisnode/
+server/logs/
