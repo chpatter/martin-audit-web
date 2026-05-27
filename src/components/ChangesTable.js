@@ -41,7 +41,7 @@ function CellValue({ row, colKey, theme }) {
     case 'source':
       return <SourceBadge source={row.source} />;
     case 'pono':
-      return <span style={{ fontFamily: theme.fonts.mono, color: theme.colors.accent, fontWeight: 600 }}>{row.pono}-{row.posuf}</span>;
+      return <span style={{ fontFamily: theme.fonts.mono, color: theme.colors.accent, fontWeight: 600 }}>{row.pono}{row.hasSuffix ? `-${row.posuf}` : ''}</span>;
     case 'lineno':
       return <span style={{ fontFamily: theme.fonts.mono, textAlign: 'center', display: 'block' }}>{row.lineno || 0}</span>;
     case 'vendname':

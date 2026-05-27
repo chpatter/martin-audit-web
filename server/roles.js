@@ -84,6 +84,10 @@ const FINANCE_FIELDS = {
   icsw: ['avgcost', 'lastcost', 'replcost', 'stndcost'],
   // Product Master (ICSP)
   icsp: ['baseprice', 'listprice', 'prodcost', 'stndcost'],
+  // Inventory Transactions (ICET)
+  icet: ['cost', 'origcost', 'icswcost'],
+  // Physical Count Detail (ICSEP)
+  icsep: ['cost', 'custcost', 'custqty', 'custqtyunavail'],
 };
 
 // Tier 3 (SENSITIVE) — banking, tax, 1099

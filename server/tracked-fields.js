@@ -51,6 +51,11 @@ const TABLE_CONFIG = {
   apsv:  { recordKey: 'vendno', suffixKey: null, lineKey: null, recordKeyType: 'number' },
   apss:  { recordKey: 'vendno', suffixKey: null, lineKey: 'shipfmno', recordKeyType: 'number' },
 
+  // Inventory
+  icet:  { recordKey: 'prod', suffixKey: null, lineKey: 'whse', recordKeyType: 'string' },
+  icsep: { recordKey: 'prod', suffixKey: null, lineKey: 'whse', recordKeyType: 'string' },
+  icset: { recordKey: 'prod', suffixKey: null, lineKey: 'whse', recordKeyType: 'string' },
+
   // Security
   sasoo:       { recordKey: 'oper2', suffixKey: null, lineKey: null, recordKeyType: 'string' },
   pv_user:     { recordKey: 'oper2', suffixKey: null, lineKey: null, recordKeyType: 'string' },
@@ -768,6 +773,123 @@ const TRACKED_FIELDS = {
     user22:           { label: 'User Defined 22', desc: 'User defined field' },
     user23:           { label: 'User Defined 23', desc: 'User defined field' },
     user24:           { label: 'User Defined 24', desc: 'User defined field' },
+  },
+
+  // ─── Inventory Transactions (ICET) ───
+
+  icet: {
+    // ── Transaction Info ──
+    transtype:   { label: 'Transaction Type', desc: 'Type of inventory transaction (adjustment, receipt, issue, count, etc.)' },
+    module:      { label: 'Module', desc: 'Which module originated the transaction (OE, PO, IC, WT, etc.)' },
+    transdt:     { label: 'Transaction Date', desc: 'Date of the transaction' },
+    postdt:      { label: 'Post Date', desc: 'Date the transaction was posted' },
+    operinit:    { label: 'Operator', desc: 'Who performed the transaction' },
+    transproc:   { label: 'Transaction Process', desc: 'Process that created the transaction' },
+    // ── Product & Location ──
+    prod:        { label: 'Product', desc: 'Product number' },
+    whse:        { label: 'Warehouse', desc: 'Warehouse ID' },
+    // ── Quantities ──
+    stkqtyship:  { label: 'Stock Qty', desc: 'Stock quantity shipped/adjusted' },
+    qtyunavail:  { label: 'Qty Unavailable', desc: 'Quantity unavailable' },
+    reasunavty:  { label: 'Reason Unavailable', desc: 'Reason for unavailability' },
+    // ── References ──
+    orderno:     { label: 'Order #', desc: 'Related order number' },
+    ordersuf:    { label: 'Order Suffix', desc: 'Related order suffix' },
+    lineno:      { label: 'Line #', desc: 'Line number' },
+    custno:      { label: 'Customer #', desc: 'Related customer number' },
+    jrnlno:      { label: 'Journal #', desc: 'Journal number' },
+    ticketno:    { label: 'Ticket #', desc: 'Count ticket number' },
+    seqno:       { label: 'Sequence #', desc: 'Sequence number' },
+    apinvno:     { label: 'AP Invoice #', desc: 'AP invoice number' },
+    refer:       { label: 'Reference', desc: 'Reference' },
+    divno:       { label: 'Division', desc: 'Division number' },
+    phyadjexcp:  { label: 'Physical Adj Exception', desc: 'Physical adjustment exception flag' },
+    // ── Costs (FINANCE tier) ──
+    cost:        { label: 'Cost', desc: 'Transaction cost' },
+    origcost:    { label: 'Original Cost', desc: 'Original cost before adjustment' },
+    icswcost:    { label: 'Warehouse Cost', desc: 'Warehouse-level cost' },
+    // ── User Defined ──
+    user1:       { label: 'User Defined 1', desc: 'User defined field' },
+    user2:       { label: 'User Defined 2', desc: 'User defined field' },
+    user3:       { label: 'User Defined 3', desc: 'User defined field' },
+    user4:       { label: 'User Defined 4', desc: 'User defined field' },
+    user5:       { label: 'User Defined 5', desc: 'User defined field' },
+    user6:       { label: 'User Defined 6', desc: 'User defined field' },
+    user7:       { label: 'User Defined 7', desc: 'User defined field' },
+    user8:       { label: 'User Defined 8', desc: 'User defined field' },
+    user9:       { label: 'User Defined 9', desc: 'User defined field' },
+  },
+
+  // ─── Physical Count Detail (ICSEP) ───
+
+  icsep: {
+    // ── Count Info ──
+    prod:        { label: 'Product', desc: 'Product number' },
+    whse:        { label: 'Warehouse', desc: 'Warehouse ID' },
+    binloc:      { label: 'Bin Location', desc: 'Bin location in the warehouse' },
+    qtycnt:      { label: 'Qty Counted', desc: 'Quantity actually counted' },
+    qtyexp:      { label: 'Qty Expected', desc: 'Expected quantity (system on-hand)' },
+    operinit:    { label: 'Operator', desc: 'Who performed the count' },
+    unit:        { label: 'Unit', desc: 'Unit of measure' },
+    inventoryty: { label: 'Inventory Type', desc: 'Inventory type' },
+    // ── Count Run ──
+    runno:       { label: 'Run #', desc: 'Physical count run number' },
+    seqno:       { label: 'Sequence #', desc: 'Sequence number within the run' },
+    rectype:     { label: 'Record Type', desc: 'Record type' },
+    transdt:     { label: 'Transaction Date', desc: 'Date of the count' },
+    transproc:   { label: 'Transaction Process', desc: 'Process that created the record' },
+    // ── Flags ──
+    lastcntdt:   { label: 'Last Count Date', desc: 'Date this product was last counted' },
+    mustcntfl:   { label: 'Must Count', desc: 'Must count flag' },
+    entfl:       { label: 'Entered', desc: 'Entry flag' },
+    phyfl:       { label: 'Physical', desc: 'Physical count flag' },
+    refer:       { label: 'Reference', desc: 'Reference' },
+    // ── Costs (FINANCE tier) ──
+    cost:        { label: 'Cost', desc: 'Cost at time of count' },
+    custcost:    { label: 'Customer Cost', desc: 'Customer cost' },
+    custqty:     { label: 'Customer Qty', desc: 'Customer quantity' },
+    custqtyunavail: { label: 'Customer Qty Unavailable', desc: 'Customer quantity unavailable' },
+    // ── User Defined ──
+    user1:       { label: 'User Defined 1', desc: 'User defined field' },
+    user2:       { label: 'User Defined 2', desc: 'User defined field' },
+    user3:       { label: 'User Defined 3', desc: 'User defined field' },
+    user4:       { label: 'User Defined 4', desc: 'User defined field' },
+    user5:       { label: 'User Defined 5', desc: 'User defined field' },
+    user6:       { label: 'User Defined 6', desc: 'User defined field' },
+    user7:       { label: 'User Defined 7', desc: 'User defined field' },
+    user8:       { label: 'User Defined 8', desc: 'User defined field' },
+    user9:       { label: 'User Defined 9', desc: 'User defined field' },
+  },
+
+  // ─── Count Tickets (ICSET) ───
+
+  icset: {
+    // ── Ticket Info ──
+    prod:        { label: 'Product', desc: 'Product number' },
+    whse:        { label: 'Warehouse', desc: 'Warehouse ID' },
+    binloc:      { label: 'Bin Location', desc: 'Bin location' },
+    qtycnt:      { label: 'Qty Counted', desc: 'Quantity counted' },
+    ticketno:    { label: 'Ticket #', desc: 'Count ticket number' },
+    uticketno:   { label: 'Unique Ticket #', desc: 'Unique ticket number' },
+    operinit:    { label: 'Operator', desc: 'Operator initials' },
+    cntoper:     { label: 'Count Operator', desc: 'Operator who performed the count' },
+    unit:        { label: 'Unit', desc: 'Unit of measure' },
+    // ── Count Run ──
+    runno:       { label: 'Run #', desc: 'Count run number' },
+    rectype:     { label: 'Record Type', desc: 'Record type' },
+    uncounttype: { label: 'Uncount Type', desc: 'Uncount type' },
+    transdt:     { label: 'Transaction Date', desc: 'Date of the count' },
+    transproc:   { label: 'Transaction Process', desc: 'Process that created the ticket' },
+    // ── User Defined ──
+    user1:       { label: 'User Defined 1', desc: 'User defined field' },
+    user2:       { label: 'User Defined 2', desc: 'User defined field' },
+    user3:       { label: 'User Defined 3', desc: 'User defined field' },
+    user4:       { label: 'User Defined 4', desc: 'User defined field' },
+    user5:       { label: 'User Defined 5', desc: 'User defined field' },
+    user6:       { label: 'User Defined 6', desc: 'User defined field' },
+    user7:       { label: 'User Defined 7', desc: 'User defined field' },
+    user8:       { label: 'User Defined 8', desc: 'User defined field' },
+    user9:       { label: 'User Defined 9', desc: 'User defined field' },
   },
 
   // ─── Security: SASOO (Operator Setup) ───

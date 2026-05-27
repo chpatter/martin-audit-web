@@ -61,7 +61,7 @@ function compareRows(source, table, prev, curr, trackedFields, lineno = 0) {
       if (displayVal === '(is missing)') continue;
       changes.push({
         source, pono,
-        posuf: Number(recordsuf),
+        posuf: Number(recordsuf), hasSuffix: !!cfg.suffixKey,
         lineno, vendno, custno, whse, levelcd, startdt, enddt, prod,
         functionName, ourproc, key1,
         field_name: field, field_label: info.label,
@@ -72,7 +72,7 @@ function compareRows(source, table, prev, curr, trackedFields, lineno = 0) {
     } else if (oldVal !== newVal) {
       changes.push({
         source, pono,
-        posuf: Number(recordsuf),
+        posuf: Number(recordsuf), hasSuffix: !!cfg.suffixKey,
         lineno, vendno, custno, whse, levelcd, startdt, enddt, prod,
         functionName, ourproc, key1,
         field_name: field, field_label: info.label,

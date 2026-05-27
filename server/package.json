@@ -1,6 +1,6 @@
 {
   "name": "martin-audit-server",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Martin Audit System backend — Infor OAuth2 + Compass Data Lake change tracking",
   "scripts": {

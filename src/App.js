@@ -8,6 +8,7 @@ import PurchasesPage from './pages/PurchasesPage';
 import OrdersPage from './pages/OrdersPage';
 import ProdWhsePage from './pages/ProdWhsePage';
 import CustomersPage from './pages/CustomersPage';
+import InventoryPage from './pages/InventoryPage';
 import CatalogPage from './pages/CatalogPage';
 import TransfersPage from './pages/TransfersPage';
 import PricingCustPage from './pages/PricingCustPage';
@@ -112,6 +113,7 @@ export default function App() {
     orders: OrdersPage,
     prod_whse: ProdWhsePage,
     customers: CustomersPage,
+    inventory: InventoryPage,
     catalog: CatalogPage,
     transfers: TransfersPage,
     pricing_cust: PricingCustPage,
