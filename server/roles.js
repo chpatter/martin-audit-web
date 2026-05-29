@@ -88,6 +88,10 @@ const FINANCE_FIELDS = {
   icet: ['cost', 'origcost', 'icswcost'],
   // Physical Count Detail (ICSEP)
   icsep: ['cost', 'custcost', 'custqty', 'custqtyunavail'],
+  // Transfer Line (WTEL)
+  wtel: ['prodcost', 'netamt', 'netord', 'netrcv'],
+  // Transfer Header (WTEH)
+  wteh: ['totlineamt', 'totordamt', 'totshipamt', 'totrcvamt'],
 };
 
 // Tier 3 (SENSITIVE) — banking, tax, 1099

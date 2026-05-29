@@ -483,32 +483,96 @@ const TRACKED_FIELDS = {
   // ─── Transfer Header (WTEH) ───
 
   wteh: {
-    duedt:       { label: 'Due Date', desc: 'Due' },
-    orderaltno:  { label: 'Related Order #', desc: 'The related order number - contains the orderno, wtno, vano, or whse transfer number' },
-    shipviaty:   { label: 'Ship Via', desc: 'This field describes the ship via. It is table driving in SASTT. ltdescri' },
-    totqtyord:   { label: 'Total Qty Order', desc: 'Total Quantity Ordered' },
-    totqtyshp:   { label: 'Total Qty Shipped', desc: 'Total Quantity Shipped' },
-    totqtyrcv:   { label: 'Total Qty Received', desc: 'Total Quantity Received' },
-    stagecd:     { label: 'Stage Code', desc: 'Transfer stage. 0 - Entered, 1 - Ordered, 2 - Shipped, 3 - Exception, 5 - Received, 9 - Closed' },
+    // ── Status ──
+    stagecd:     { label: 'Stage Code', desc: 'Transfer stage. 0 - Requested, 1 - Ordered, 2 - Picked, 3 - Shipped, 4 - Pre, 5 - Exception, 6 - Received, 9 - Cancelled' },
+    laststagecd: { label: 'Last Stage Code', desc: 'Previous stage before the current change' },
+    reasoncode:  { label: 'Reason Code', desc: 'Reason code for status change' },
+    rushfl:      { label: 'Rush', desc: 'Rush flag' },
+    // ── Dates ──
+    duedt:       { label: 'Due Date', desc: 'Due date for the transfer' },
+    reqshipdt:   { label: 'Requested Ship Date', desc: 'Requested ship date' },
+    shipdt:      { label: 'Ship Date', desc: 'Date the transfer was shipped' },
+    receiptdt:   { label: 'Receipt Date', desc: 'Date the transfer was received' },
+    // ── Warehouses & Shipping ──
     shipfmwhse:  { label: 'Ship From Whse', desc: 'Ship from warehouse' },
     shiptowhse:  { label: 'Ship To Whse', desc: 'Ship to warehouse' },
     shipviaty:   { label: 'Ship Via', desc: 'Ship via type' },
+    // ── Quantities ──
+    totqtyord:   { label: 'Total Qty Ordered', desc: 'Total quantity ordered' },
+    totqtyshp:   { label: 'Total Qty Shipped', desc: 'Total quantity shipped' },
+    totqtyrcv:   { label: 'Total Qty Received', desc: 'Total quantity received' },
+    nolineitem:  { label: '# of Lines', desc: 'Number of line items on the transfer' },
+    // ── Personnel ──
+    operinit:    { label: 'Operator', desc: 'Operator who made the change' },
+    openinit:    { label: 'Opened By', desc: 'Operator who opened the transfer' },
+    rcvoperinit: { label: 'Received By', desc: 'Operator who received the transfer' },
+    // ── References ──
+    orderaltno:  { label: 'Related Order #', desc: 'Related order number' },
+    refer:       { label: 'Reference', desc: 'Reference text' },
+    // ── Financials (FINANCE tier) ──
+    totlineamt:  { label: 'Total Line Amount', desc: 'Total line amount' },
+    totordamt:   { label: 'Total Order Amount', desc: 'Total order amount' },
+    totshipamt:  { label: 'Total Ship Amount', desc: 'Total shipped amount' },
+    totrcvamt:   { label: 'Total Received Amount', desc: 'Total received amount' },
   },
 
   // ─── Transfer Line (WTEL) ───
 
   wtel: {
-    bofl:        { label: 'Backorder Flag', desc: 'Back Order Default flag' },
-    approveinit: { label: 'Approval', desc: 'Operator id of the user that approved transfer' },
-    qtyord:      { label: 'Qty Ordered', desc: 'Ordered' },
-    qtyrcv:      { label: 'Qty Received', desc: 'Rcv Qty' },
-    qtyship:     { label: 'Qty Shipped', desc: 'Quantity shipped' },
-    shiptowhse:  { label: 'Ship To Whse', desc: 'Ship To Warehouse' },
-    shipfmwhse:  { label: 'Ship From Whse', desc: 'Ship from warehouse' },
-    prodcost:    { label: 'Product Cost', desc: 'The product cost of the line item. If the product is specially costed, this reflects that cost' },
+    // ── Status ──
+    statustype:  { label: 'Status', desc: '(A)ctive, (S)hipped, (I)nactive, (C)anceled' },
+    bofl:        { label: 'Backorder Flag', desc: 'Back order default flag' },
+    approveinit: { label: 'Approval', desc: 'Operator who approved the transfer line' },
+    approvedt:   { label: 'Approval Date', desc: 'Date the line was approved' },
+    approvety:   { label: 'Approval Type', desc: 'Approval type' },
+    // ── Product ──
     shipprod:    { label: 'Product', desc: 'Product shipped' },
-    statustype:  { label: 'Status', desc: 'Line status' },
+    binloc:      { label: 'Bin Location', desc: 'Bin location in the warehouse' },
+    // ── Quantities ──
+    qtyord:      { label: 'Qty Ordered', desc: 'Quantity ordered' },
+    qtyrcv:      { label: 'Qty Received', desc: 'Quantity received' },
+    qtyship:     { label: 'Qty Shipped', desc: 'Quantity shipped' },
+    stkqtyord:   { label: 'Stock Qty Ordered', desc: 'Stocking quantity ordered' },
+    stkqtyrcv:   { label: 'Stock Qty Received', desc: 'Stocking quantity received' },
+    stkqtyship:  { label: 'Stock Qty Shipped', desc: 'Stocking quantity shipped' },
     unit:        { label: 'Unit', desc: 'Unit of measure' },
+    // ── Warehouses ──
+    shiptowhse:  { label: 'Ship To Whse', desc: 'Ship to warehouse' },
+    shipfmwhse:  { label: 'Ship From Whse', desc: 'Ship from warehouse' },
+    // ── Dates ──
+    duedt:       { label: 'Due Date', desc: 'Line-level due date' },
+    // ── Personnel ──
+    operinit:    { label: 'Operator', desc: 'Operator who changed the line' },
+    // ── Financials (FINANCE tier) ──
+    prodcost:    { label: 'Product Cost', desc: 'Product cost of the line item' },
+    netamt:      { label: 'Net Amount', desc: 'Net dollar amount for this line' },
+    netord:      { label: 'Net Ordered', desc: 'Net ordered amount' },
+    netrcv:      { label: 'Net Received', desc: 'Net received amount' },
+    // ── User Defined ──
+    user1:       { label: 'User Defined 1', desc: 'User defined field' },
+    user2:       { label: 'User Defined 2', desc: 'User defined field' },
+    user3:       { label: 'User Defined 3', desc: 'User defined field' },
+    user4:       { label: 'User Defined 4', desc: 'User defined field' },
+    user5:       { label: 'User Defined 5', desc: 'User defined field' },
+    user6:       { label: 'User Defined 6', desc: 'User defined field' },
+    user7:       { label: 'User Defined 7', desc: 'User defined field' },
+    user8:       { label: 'User Defined 8', desc: 'User defined field' },
+    user9:       { label: 'User Defined 9', desc: 'User defined field' },
+    user10:      { label: 'User Defined 10', desc: 'User defined field' },
+    user11:      { label: 'User Defined 11', desc: 'User defined field' },
+    user12:      { label: 'User Defined 12', desc: 'User defined field' },
+    user13:      { label: 'User Defined 13', desc: 'User defined field' },
+    user14:      { label: 'User Defined 14', desc: 'User defined field' },
+    user15:      { label: 'User Defined 15', desc: 'User defined field' },
+    user16:      { label: 'User Defined 16', desc: 'User defined field' },
+    user17:      { label: 'User Defined 17', desc: 'User defined field' },
+    user18:      { label: 'User Defined 18', desc: 'User defined field' },
+    user19:      { label: 'User Defined 19', desc: 'User defined field' },
+    user20:      { label: 'User Defined 20', desc: 'User defined field' },
+    user21:      { label: 'User Defined 21', desc: 'User defined field' },
+    user22:      { label: 'User Defined 22', desc: 'User defined field' },
+    user23:      { label: 'User Defined 23', desc: 'User defined field' },
+    user24:      { label: 'User Defined 24', desc: 'User defined field' },
   },
 
   // ─── Customer Pricing (PDSC) ───
