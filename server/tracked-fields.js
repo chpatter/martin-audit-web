@@ -103,6 +103,7 @@ const TRACKED_FIELDS = {
     laststagecd: { label: 'Last Stage Code', desc: 'Previous stage code' },
     notimeschg: { label: 'Times Changed', desc: 'Number of times changed' },
     ackrsn:     { label: 'Acknowledgment Reason', desc: 'Description: Purchase order acknowledgement reason. Content: AD Accepted without change (VMI or non-VMI) AC Accepted with change (non-VMI)' },
+    totlineamt: { label: 'Total Line Amount', desc: 'Total line item amount for the PO' },
   },
 
   poel: {
@@ -125,6 +126,10 @@ const TRACKED_FIELDS = {
     printfl:    { label: 'Printed', desc: 'Set to yes when a change occurs on the line item that requires a reprint' },
     notimeschg: { label: 'Times Changed', desc: 'number of times this line item has been changed' },
     ackrsn:     { label: 'Acknowledgment Reason', desc: 'Purchase order line acknowledgement reason. Content: (IA) Item accepted (IC) Item accepted, changes made' },
+    unitcost:   { label: 'Unit Cost', desc: 'Unit cost for this line item' },
+    extcost:    { label: 'Extended Cost', desc: 'Extended cost (unit cost × quantity)' },
+    foreigncost: { label: 'Foreign Cost', desc: 'Cost in foreign currency' },
+    orderaltcost: { label: 'Order Alt Cost', desc: 'Order alternate cost' },
   },
 
   // ─── Orders ───
@@ -202,6 +207,8 @@ const TRACKED_FIELDS = {
     user22:        { label: 'User Defined 22', desc: 'User defined field' },
     user23:        { label: 'User Defined 23', desc: 'User defined field' },
     user24:        { label: 'User Defined 24', desc: 'User defined field' },
+    addressoverfl: { label: 'Address Override', desc: 'Address override flag — indicates the ship-to address was manually changed on this order' },
+    ordersource:   { label: 'Order Source', desc: 'Source/origin of the order (e.g. EDI, web, manual entry)' },
   },
 
   oeel: {
@@ -219,6 +226,7 @@ const TRACKED_FIELDS = {
     disctype:    { label: 'Discount Type', desc: 'The discount type for the line item. It indicates if the discount is a percent or a dollar. Either way, both the discamt and discpct are calculated and stored.' },
     priceoverfl: { label: 'Price Override', desc: 'If this flag is set to yes, it indicates the price has been manually overridden. This will occur when the price is typed in or when previous pricing is done. Content: yes = the price was manually overridden no = the price was not manually overridden' },
     pricetype:   { label: 'Price Type', desc: 'The price type defines a group of products that are similarly priced. This field is used for PDSC level 2, 5, and 8 pricing. It is also used to group products for PDSS pricing.' },
+    specprcty:   { label: 'Special Price Type', desc: 'Special pricing type applied to this line item' },
     specnstype:  { label: 'Special/Non-Stock Type', desc: 'The special/non-stock type describes the product/line disposition.' },
     // ── Quantities ──
     qtyord:      { label: 'Qty Ordered', desc: 'The quantity of the product that was requested by the customer. This field is represented in the line item unit of measure.' },
@@ -280,6 +288,10 @@ const TRACKED_FIELDS = {
     weight:      { label: 'Weight', desc: 'Weight is expressed per stocking unit. Check dictionary for more info.' },
     descrip_1:   { label: 'Description 1', desc: 'An array of 2, this holds the primary product description and appears on most reports and inquiries for products. Check dictionary for more info.' },
     descrip_2:   { label: 'Description 2', desc: 'Secondary product description' },
+    baseprice:   { label: 'Base Price', desc: 'Base customer price for this product' },
+    listprice:   { label: 'List Price', desc: 'Customer list or retail price' },
+    prodcost:    { label: 'Product Cost', desc: 'Product cost' },
+    stndcost:    { label: 'Standard Cost', desc: 'Standard cost for this product' },
     user3:       { label: 'User Defined 3', desc: 'User defined field' },
     user5:       { label: 'User Defined 5', desc: 'User defined field' },
     user17:      { label: 'User Defined 17', desc: 'User defined field' },
@@ -429,6 +441,8 @@ const TRACKED_FIELDS = {
     prodcost:    { label: 'Replacement Cost', desc: 'Replacement cost for this catalog entry' },
     stndcost:    { label: 'Standard Cost', desc: 'Standard cost for this catalog entry' },
     speccostty:  { label: 'Special Price/Cost', desc: 'Special price or cost type' },
+    costmult:    { label: 'Cost Multiplier', desc: 'Cost multiplier used in pricing calculations' },
+    costtype:    { label: 'Cost Type', desc: 'Determines how cost is calculated for this catalog entry' },
     rebatety:    { label: 'Rebate Type', desc: 'Rebate type code' },
     rebatecost:  { label: 'Rebate Cost', desc: 'Rebate cost amount' },
     pbseqno:     { label: 'Price Book Sequence #', desc: 'Price book sequence number' },
