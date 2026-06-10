@@ -35,4 +35,5 @@ jobs:
 
       - name: Restart IIS
         run: |
-          iisreset
+          Start-ScheduledTask -TaskName "IISReset-Deploy"
+          Start-Sleep -Seconds 5
