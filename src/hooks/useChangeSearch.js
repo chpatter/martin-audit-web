@@ -192,9 +192,20 @@ export default function useChangeSearch({
   const handleExportCSV = useCallback(() => {
     if (sortedChanges.length === 0 || !csvRowMapper) return;
 
+    // Excel interprets values like "150E104" as scientific notation.
+    // Wrapping in ="value" forces Excel to treat it as text.
+    const escapeForExcel = (val) => {
+      const s = String(val).replace(/"/g, '""');
+      // Detect patterns Excel would misinterpret as scientific notation (digits + E + digits)
+      if (/^\d+\.?\d*[eE]\+?\d+$/.test(String(val)) || /^\d+[eE]\d+$/.test(String(val))) {
+        return `"=""${s}"""`;
+      }
+      return `"${s}"`;
+    };
+
     const rows = sortedChanges.map(csvRowMapper);
     const csvContent = [csvHeaders, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .map(row => row.map(cell => escapeForExcel(cell)).join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
