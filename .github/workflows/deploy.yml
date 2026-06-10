@@ -1,0 +1,38 @@
+# Auto-deploy to VM when main branch is updated
+# Runs on a self-hosted runner installed on 25MARTINAPP01
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull latest code
+        run: |
+          cd C:\inetpub\martin-audit-app
+          git pull origin main
+
+      - name: Install frontend dependencies
+        run: |
+          cd C:\inetpub\martin-audit-app
+          npm install
+
+      - name: Install backend dependencies
+        run: |
+          cd C:\inetpub\martin-audit-app\server
+          npm install
+
+      - name: Build frontend
+        run: |
+          cd C:\inetpub\martin-audit-app
+          npm run build
+
+      - name: Restart IIS
+        run: |
+          iisreset
