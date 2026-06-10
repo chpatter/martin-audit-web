@@ -1,6 +1,6 @@
 # ▶ Martin Audit System
 
-**CloudSuite Distribution Audit Log Viewer** — An internal web application that tracks field-level changes across 10 modules in Infor CloudSuite SXe. Built to replace Agile Dragon's Dragon Pack Audit.
+**CloudSuite Distribution Audit Log Viewer** — An internal web application that tracks field-level changes across 11 modules in Infor CloudSuite SXe. Built to replace Agile Dragon's Dragon Pack Audit.
 
 Users browse to `https://audit.martinsupply.com` and Windows SSO handles the rest — no login screen, no credentials, no installs.
 
@@ -40,15 +40,16 @@ IIS handles authentication via Kerberos/NTLM, serves the React frontend as stati
 
 | Module | Tables | Tracked Fields | Description |
 |--------|--------|---------------|-------------|
-| **Catalog** | ICSC | 48 | Product catalog — pricing, descriptions, vendor info, UOM |
+| **Catalog** | ICSC | 50 | Product catalog — pricing, descriptions, vendor info, UOM |
 | **Customers** | ARSC, ARSS | 45 + 45 | Customer master and ship-to records — address, terms, reps, credit |
+| **Inventory** | ICET, ICSEP, ICSET | 34 + 31 + 23 | Transactions, cycle counts, adjustments, count tickets |
 | **Orders** | OEEH, OEEL | 65 + 55 | Sales order headers and lines — stage, pricing, quantities, ship-to |
 | **Pricing-Customer** | PDSC | 77 | Customer price/discount records — multipliers, qty breaks, contracts |
 | **Pricing-Vendor** | PDSV | 44 | Vendor cost agreements and pricing |
-| **Prod/Whse** | ICSP, ICSW | 12 + 20 | Product master and warehouse-level settings |
-| **Purchases** | POEH, POEL | 33 + 20 | Purchase order headers and lines — stage, dates, costs, quantities |
+| **Prod/Whse** | ICSP, ICSW | 16 + 23 | Product master and warehouse-level settings, bin locations |
+| **Purchases** | POEH, POEL | 33 + 23 | Purchase order headers and lines — stage, dates, costs, quantities |
 | **Security** | SASOO, PV_USER, PV_SECURE, AUTHSECURE | 90 + 46 + 3 + 10 | Operator permissions, function security (Admin only) |
-| **Transfers** | WTEH, WTEL | 9 + 11 | Warehouse transfer headers and lines |
+| **Transfers** | WTEH, WTEL | 24 + 46 | Warehouse transfer headers and lines — stage, dates, quantities, bin locations |
 | **Vendors** | APSV, APSS | 63 + 47 | Vendor master and ship-from records — banking, 1099, freight, terms |
 
 ### Tracked Fields
@@ -61,10 +62,10 @@ Access is controlled by AD security groups. Users get the highest role from all 
 
 | AD Group | Role | Modules | Fields Visible |
 |----------|------|---------|---------------|
-| Martin-Audit-Users | USERS | 9 (no Security) | Operational — dates, stages, addresses, quantities, names, reps, warehouses |
-| Martin-Audit-Finance | FINANCE | 9 (no Security) | + pricing, costs, margins, credit limits, discounts, rebates |
-| Martin-Audit-Sensitive | SENSITIVE | 9 (no Security) | + bank accounts, routing numbers, tax IDs, 1099 info |
-| Martin-Audit-Admin | ADMIN | All 10 | Everything unmasked, including Security module |
+| Martin-Audit-Users | USERS | 10 (no Security) | Operational — dates, stages, addresses, quantities, names, reps, warehouses |
+| Martin-Audit-Finance | FINANCE | 10 (no Security) | + pricing, costs, margins, credit limits, discounts, rebates |
+| Martin-Audit-Sensitive | SENSITIVE | 10 (no Security) | + bank accounts, routing numbers, tax IDs, 1099 info |
+| Martin-Audit-Admin | ADMIN | All 11 | Everything unmasked, including Security module |
 
 Masking is server-side — masked field values are replaced with `●●●●●●` before the response is sent. The real data never reaches the browser. There is nothing to unredact on the client side.
 
@@ -115,6 +116,7 @@ Opens at `http://localhost:3000`. The React proxy forwards `/api` requests to po
 - **URL:** https://audit.martinsupply.com
 - **App Path:** C:\inetpub\martin-audit-app
 - **IIS Site:** Martin Audit (port 443, HTTPS)
+- **GitHub:** https://github.com/MartinSupply/martin-audit-web
 
 ### Prerequisites
 
@@ -130,7 +132,7 @@ ARR (Application Request Routing) and PM2 are NOT needed.
 ### 1. Deploy the Code
 
 ```powershell
-git clone https://github.com/chpatter/martin-audit-web.git C:\inetpub\martin-audit-app
+git clone https://github.com/MartinSupply/martin-audit-web.git C:\inetpub\martin-audit-app
 cd C:\inetpub\martin-audit-app
 npm install
 cd server
@@ -146,33 +148,6 @@ No `copy web.config` step needed — `web.config` lives at the project root.
 ```powershell
 copy server\.env.example server\.env
 notepad server\.env
-```
-
-```
-# Infor CloudSuite OAuth2
-INFOR_TENANT_ID=your_tenant_id
-INFOR_SSO_BASE=https://mingle-sso.inforcloudsuite.com
-INFOR_ION_BASE=https://mingle-ionapi.inforcloudsuite.com
-INFOR_CLIENT_ID=your_client_id
-INFOR_CLIENT_SECRET=your_client_secret
-INFOR_USERNAME="your_service_account_username"
-INFOR_PASSWORD="your_service_account_password"
-INFOR_CONO=1
-INFOR_OPER=MAUD
-
-# CORS
-ALLOWED_ORIGINS=https://audit.martinsupply.com
-
-# Active Directory
-AD_ENABLED=true
-AD_URL=ldap://16DCFLORENCE.martin.local
-AD_BASE_DN=DC=martin,DC=local
-AD_USERNAME=MartinAudit@martin.local
-AD_PASSWORD=your-ad-service-account-password
-AD_GROUP_USERS=Martin-Audit-Users
-AD_GROUP_FINANCE=Martin-Audit-Finance
-AD_GROUP_SENSITIVE=Martin-Audit-Sensitive
-AD_GROUP_ADMIN=Martin-Audit-Admin
 ```
 
 ### 3. Configure IIS
@@ -199,6 +174,12 @@ C:\Windows\System32\inetsrv\appcmd.exe unlock config -section:system.webServer/h
 **Set folder permissions:**
 ```powershell
 icacls "C:\inetpub\martin-audit-app" /grant "IIS AppPool\Martin Audit:(OI)(CI)M" /T
+icacls "C:\inetpub\martin-audit-app" /grant "NETWORK SERVICE:(OI)(CI)M" /T
+```
+
+**Git safe directory (required for GitHub Actions runner):**
+```powershell
+git config --system --add safe.directory C:/inetpub/martin-audit-app
 ```
 
 **Enable loopback auth (for testing from the VM itself):**
@@ -211,17 +192,13 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0" -Name
 iisreset
 ```
 
-### 4. Verify
-
-Browse to `https://audit.martinsupply.com` — should SSO straight in on domain-joined machines (once the Intranet zone GPO is pushed). The header bar shows the Windows username and role badge.
-
-### 5. DNS and SSL
+### 4. DNS and SSL
 
 Managed by the infrastructure team:
 - **DNS A record:** `audit.martinsupply.com` → VM IP (10.100.1.148)
 - **SSL certificate:** Internal wildcard cert bound to the IIS site on port 443
 
-### 6. SSO (No Sign-in Prompt)
+### 5. SSO (No Sign-in Prompt)
 
 Domain-joined machines auto-send Windows credentials when the site is in the Local Intranet zone. Push via Group Policy:
 - **GPO path:** Computer Configuration → Administrative Templates → Microsoft Edge → HTTP Authentication → Auth Server Allowlist
@@ -229,36 +206,75 @@ Domain-joined machines auto-send Windows credentials when the site is in the Loc
 
 Without the GPO, users get a one-time Windows login prompt (which works, just not seamless).
 
-## Deploying Updates
+## CI/CD — GitHub Actions Auto-Deploy
 
-**Frontend-only changes:**
-```powershell
-cd C:\inetpub\martin-audit-app
-git pull
-npm run build
+Deployments are automated via GitHub Actions with a self-hosted runner on the VM.
+
+### Branch Strategy
+
+- **`dev`** — daily work branch. Push freely, test locally. Nothing happens on the VM.
+- **`main`** — production branch. When `dev` is merged into `main`, GitHub Actions auto-deploys to the VM.
+
+### Development Workflow
+
+```
+Your PC (dev branch)           GitHub                    VM (auto-deploy)
+┌──────────────────┐        ┌──────────────┐         ┌──────────────────┐
+│ Edit code        │──push─▶│  dev branch  │         │                  │
+│ Test locally     │        │  (no deploy) │         │                  │
+│ npm start        │        │              │         │                  │
+└──────────────────┘        │              │         │                  │
+                            │              │         │                  │
+   When ready:              │              │         │                  │
+   git checkout main        │              │         │                  │
+   git merge dev    ──push─▶│  main branch │──auto──▶│  git pull        │
+   git push                 │              │  deploy │  npm run build   │
+   git checkout dev         │              │         │  iisreset        │
+                            └──────────────┘         └──────────────────┘
 ```
 
-**Backend changes:**
+### Deploy Commands
+
 ```powershell
-cd C:\inetpub\martin-audit-app
-git pull
-iisreset
+# Push daily work (no deploy)
+git checkout dev
+git add .
+git commit -m "description of changes"
+git push
+
+# Deploy to production
+git checkout main
+git merge dev
+git push
+git checkout dev
 ```
 
-**Both:**
-```powershell
-cd C:\inetpub\martin-audit-app
-git pull
-npm run build
-iisreset
-```
+### What the Workflow Does (`.github/workflows/deploy.yml`)
 
-**Development workflow:**
-1. Edit code on your local machine
-2. Test with `npm start` locally
-3. Commit and push to GitHub
-4. On the VM: `git pull`, build, `iisreset`
-5. Users get updates on next browser refresh
+1. Triggers on push to `main`
+2. Runs on the self-hosted runner (installed on 25MARTINAPP01)
+3. `git pull origin main` — pulls latest code
+4. `npm install` — installs any new frontend dependencies
+5. `npm install` (server) — installs any new backend dependencies
+6. `npm run build` — builds the React frontend
+7. `iisreset` — restarts IIS and Node.js
+
+### Self-Hosted Runner
+
+Installed at `C:\actions-runner` on the VM. Runs as a Windows service under LOCAL SYSTEM so it has admin rights for `iisreset`. The runner connects to `https://github.com/MartinSupply/martin-audit-web` and listens for workflow triggers.
+
+### Dual Push (Company + Personal Repo)
+
+Git is configured to push to both repos simultaneously:
+- **Company:** `https://github.com/MartinSupply/martin-audit-web` (production, has the runner)
+- **Personal:** `https://github.com/chpatter/martin-audit-web` (portfolio backup)
+
+```powershell
+git remote -v
+# origin  https://github.com/MartinSupply/martin-audit-web.git (fetch)
+# origin  https://github.com/MartinSupply/martin-audit-web.git (push)
+# origin  https://github.com/chpatter/martin-audit-web.git (push)
+```
 
 ## Environment Variables
 
@@ -300,6 +316,7 @@ iisreset
 - **Error sanitization** — internal errors logged server-side, never sent to clients
 - **SXe proxy whitelisting** — only approved endpoint paths are proxied
 - **Credential isolation** — all secrets in `server/.env` on the VM, never in client code
+- **CI/CD isolation** — GitHub Actions runner runs as LOCAL SYSTEM, no personal credentials tied to deployments
 
 ## Audit Log
 
@@ -320,10 +337,10 @@ Every user action is logged to daily JSON-lines files at `server/logs/audit-YYYY
 **Reviewing logs on the VM:**
 ```powershell
 # Today's log
-type C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+type C:\inetpub\martin-audit-app\server\logs\audit-2026-06-10.log
 
 # Search for a specific user
-findstr "chpatter" C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+findstr "chpatter" C:\inetpub\martin-audit-app\server\logs\audit-2026-06-10.log
 
 # Search for all searches across all dates
 findstr "search" C:\inetpub\martin-audit-app\server\logs\audit-*.log
@@ -387,6 +404,9 @@ Log files rotate daily and are gitignored. They persist on the VM until manually
 
 ```
 martin-audit-web/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml       # GitHub Actions auto-deploy on push to main
 ├── public/
 │   ├── index.html           # HTML shell
 │   └── triangle.svg         # Martin red triangle logo
@@ -403,13 +423,14 @@ martin-audit-web/
 │   │   └── UI.js            # Shared primitives (Badge, GlowDot, StageBadge)
 │   ├── config/
 │   │   ├── ThemeContext.js  # React context for dark/light theme
-│   │   ├── modules.js       # Module definitions (10 modules)
+│   │   ├── modules.js       # Module definitions (11 modules)
 │   │   └── theme.js         # Design tokens — colors, fonts, radii, shadows
 │   ├── hooks/
 │   │   └── useChangeSearch.js # Shared hook — search, filter, sort, CSV export
 │   ├── pages/
 │   │   ├── CatalogPage.js   # ICSC catalog changes
 │   │   ├── CustomersPage.js # ARSC + ARSS customer changes
+│   │   ├── InventoryPage.js # ICET + ICSEP + ICSET inventory transactions and counts
 │   │   ├── LoginPage.js     # Auto-connect with AD denial handling
 │   │   ├── OrdersPage.js    # OEEH + OEEL order changes
 │   │   ├── PricingCustPage.js # PDSC customer pricing changes
@@ -433,7 +454,7 @@ martin-audit-web/
 │   ├── compass.js           # Compass Data Lake client — submit, poll, fetch
 │   ├── lookups.js           # Name enrichment — caches vendor/customer/operator names
 │   ├── roles.js             # RBAC — role definitions, field masking rules, table filtering
-│   ├── tracked-fields.js    # Field registry — 19 tables, 763 tracked fields
+│   ├── tracked-fields.js    # Field registry — 22 tables, 893 tracked fields
 │   ├── logs/                # Audit logs (gitignored, auto-created)
 │   ├── package.json         # Backend dependencies
 │   └── .env.example         # Backend environment template
@@ -441,6 +462,7 @@ martin-audit-web/
 ├── iisnode.yml              # iisnode settings — promotes AUTH_USER to Node.js
 ├── .gitignore               # Ignores .env, node_modules, build, iisnode logs
 ├── package.json             # Frontend dependencies and scripts
+├── VM-Operations-Guide.md   # Cheat sheet for VM administration
 └── README.md
 ```
 
@@ -453,9 +475,9 @@ martin-audit-web/
 
 ## Credential Rotation
 
-**Infor:** Regenerate OAuth2 credentials in ION API portal, update `server/.env`, run `iisreset`.
+**Infor:** Regenerate OAuth2 credentials in ION API portal, update `server/.env`, push to main (auto-deploys with `iisreset`).
 
-**Active Directory:** Reset the MartinAudit password in ADUC, update `server/.env`, run `iisreset`.
+**Active Directory:** Reset the MartinAudit password in ADUC, update `server/.env` directly on the VM, run `iisreset`.
 
 ## Tech Stack
 
@@ -470,8 +492,9 @@ martin-audit-web/
 | Auth (Infor) | OAuth2 service account (grant_type=password) | Compass and SXe API access |
 | Auth (Users) | IIS Windows Authentication + AD LDAP | Kerberos/NTLM SSO with role-based access |
 | Access Control | RBAC with 4 tiers | Field-level masking by AD group membership |
-| Data | Compass Data Lake (allvariations) | Historical record versions across 19 tables |
+| Data | Compass Data Lake (allvariations) | Historical record versions across 22 tables |
 | Enrichment | Cached ARSC, APSV, SASOO lookups | Vendor/customer/operator display names |
+| CI/CD | GitHub Actions + self-hosted runner | Auto-deploy on merge to main |
 
 ---
 

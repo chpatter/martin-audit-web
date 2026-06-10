@@ -6,31 +6,47 @@
 **Backend Config:** C:\inetpub\martin-audit-app\server\.env
 **IIS Site:** Martin Audit (port 443, HTTPS)
 **Node.js:** Managed by iisnode (inside IIS, no separate process)
-**GitHub:** https://github.com/chpatter/martin-audit-web
+**GitHub:** https://github.com/MartinSupply/martin-audit-web
+**Auto-Deploy:** GitHub Actions → self-hosted runner on this VM
 
 ---
 
-## Deploy an Update
+## Deploying Updates
 
-**Frontend-only changes:**
+### Automatic (standard workflow)
+
+Merge to `main` and push — GitHub Actions handles the rest:
+
 ```powershell
-cd C:\inetpub\martin-audit-app
-git pull
-npm run build
+# On your local machine
+git checkout main
+git merge dev
+git push
+git checkout dev
 ```
 
-**Backend changes:**
+The workflow pulls code, installs deps, builds frontend, and restarts IIS automatically.
+
+### Manual (backup / emergency)
+
+If the runner is down or you need to deploy directly:
+
 ```powershell
 cd C:\inetpub\martin-audit-app
-git pull
+git pull origin main
+npm install
+cd server
+npm install
+cd ..
+npm run build
 iisreset
 ```
 
-**Both:**
+### Backend-only hotfix
+
 ```powershell
 cd C:\inetpub\martin-audit-app
-git pull
-npm run build
+git pull origin main
 iisreset
 ```
 
@@ -40,8 +56,8 @@ iisreset
 
 | Task | Command |
 |------|---------|
-| Deploy frontend update | `git pull` then `npm run build` |
-| Deploy backend update | `git pull` then `iisreset` |
+| Deploy to production | Merge `dev` → `main`, push (auto-deploys) |
+| Manual deploy | `git pull`, `npm run build`, `iisreset` |
 | Restart Node.js | `iisreset` |
 | Check backend health | Browse to `https://audit.martinsupply.com/api/health` |
 | Check user auth/role | Browse to `https://audit.martinsupply.com/api/auth/status` |
@@ -51,6 +67,8 @@ iisreset
 | Search audit log by user | `findstr "username" C:\inetpub\martin-audit-app\server\logs\audit-*.log` |
 | Check IIS site status | `C:\Windows\System32\inetsrv\appcmd.exe list site "Martin Audit"` |
 | Open IIS Manager | `C:\Windows\System32\inetsrv\InetMgr.exe` |
+| Check runner status | `Get-Service | Where-Object { $_.Name -like '*actions*' }` |
+| Check deploy history | `https://github.com/MartinSupply/martin-audit-web/actions` |
 | Check Node.js version | `node --version` |
 
 ---
@@ -129,11 +147,27 @@ Browse to `https://audit.martinsupply.com/api/health` — check `"authenticated"
 - From VM: loopback registry key must be set (see below)
 - For office users: Intranet zone GPO must be pushed
 
+### Auto-Deploy Failed
+
+1. Check the Actions tab: `https://github.com/MartinSupply/martin-audit-web/actions`
+2. Click the failed run to see which step failed
+3. Check the runner is running:
+   ```powershell
+   Get-Service | Where-Object { $_.Name -like '*actions*' }
+   ```
+   If stopped:
+   ```powershell
+   Start-Service -Name (Get-Service | Where-Object { $_.Name -like '*actions*' }).Name
+   ```
+
 ### After a VM Reboot
 
-Nothing needed — iisnode starts automatically with IIS. Verify:
+Both IIS and the GitHub Actions runner start automatically. Verify:
 ```
 https://audit.martinsupply.com/api/health
+```
+```powershell
+Get-Service | Where-Object { $_.Name -like '*actions*' }
 ```
 
 ### Missing Dependencies After Code Update
@@ -175,6 +209,10 @@ C:\Windows\System32\inetsrv\appcmd.exe unlock config -section:system.webServer/h
 
 # Folder permissions
 icacls "C:\inetpub\martin-audit-app" /grant "IIS AppPool\Martin Audit:(OI)(CI)M" /T
+icacls "C:\inetpub\martin-audit-app" /grant "NETWORK SERVICE:(OI)(CI)M" /T
+
+# Git safe directory (for GitHub Actions runner)
+git config --system --add safe.directory C:/inetpub/martin-audit-app
 
 # Loopback auth (for VM self-access only)
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0" -Name "BackConnectionHostNames" -Value "audit.martinsupply.com" -PropertyType MultiString -Force
@@ -188,6 +226,45 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0" -Name
 - API requests (`/api/*`) route to `server/index.js` via iisnode
 - Node.js runs inside the IIS worker process — no separate port
 - `iisreset` restarts everything
+
+---
+
+## GitHub Actions Runner
+
+### Location
+
+Installed at `C:\actions-runner` on the VM.
+
+### Service
+
+Runs as a Windows service under LOCAL SYSTEM. Starts automatically on boot.
+
+```powershell
+# Check status
+Get-Service | Where-Object { $_.Name -like '*actions*' }
+
+# Start if stopped
+Start-Service -Name (Get-Service | Where-Object { $_.Name -like '*actions*' }).Name
+
+# Stop
+Stop-Service -Name (Get-Service | Where-Object { $_.Name -like '*actions*' }).Name
+```
+
+### What it does
+
+Listens for pushes to the `main` branch on `https://github.com/MartinSupply/martin-audit-web`. When triggered, runs the deploy workflow: `git pull` → `npm install` → `npm run build` → `iisreset`.
+
+### Re-registering the runner
+
+If the runner needs to be reconfigured (e.g., moved to a different repo):
+
+```powershell
+cd C:\actions-runner
+.\config.cmd remove
+.\config.cmd --url https://github.com/MartinSupply/martin-audit-web --token NEW_TOKEN --runasservice
+```
+
+Get a fresh token from: GitHub repo → Settings → Actions → Runners → New self-hosted runner
 
 ---
 
@@ -216,9 +293,9 @@ Membership cached 15 min. `iisreset` clears immediately.
 
 ## Credential Rotation
 
-**Infor:** Update `server/.env` with new OAuth2 credentials → `iisreset`
+**Infor:** Update `server/.env` on VM with new OAuth2 credentials → `iisreset`
 
-**AD service account:** Reset password in ADUC → update `server/.env` → `iisreset`
+**AD service account:** Reset password in ADUC → update `server/.env` on VM → `iisreset`
 
 ---
 
@@ -234,6 +311,7 @@ Membership cached 15 min. `iisreset` clears immediately.
 | IIS config | C:\inetpub\martin-audit-app\web.config |
 | iisnode config | C:\inetpub\martin-audit-app\iisnode.yml |
 | iisnode logs | C:\inetpub\martin-audit-app\iisnode\ |
+| GitHub Actions runner | C:\actions-runner |
 
 ---
 
@@ -243,12 +321,12 @@ Daily JSON-lines files at `server\logs\audit-YYYY-MM-DD.log`. Each line records 
 
 **Review today's log:**
 ```powershell
-type C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+type C:\inetpub\martin-audit-app\server\logs\audit-2026-06-10.log
 ```
 
 **Search for a specific user:**
 ```powershell
-findstr "chpatter" C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+findstr "chpatter" C:\inetpub\martin-audit-app\server\logs\audit-2026-06-10.log
 ```
 
 **Search for all searches across all dates:**
@@ -279,6 +357,12 @@ curl https://audit.martinsupply.com/api/health -k
 # IIS sites
 C:\Windows\System32\inetsrv\appcmd.exe list site
 
+# GitHub Actions runner status
+Get-Service | Where-Object { $_.Name -like '*actions*' }
+
+# Recent deploy history
+# Visit: https://github.com/MartinSupply/martin-audit-web/actions
+
 # AD group members
 Get-ADGroupMember "Martin-Audit-Users" | Select-Object Name, SamAccountName
 Get-ADGroupMember "Martin-Audit-Admin" | Select-Object Name, SamAccountName
@@ -293,5 +377,5 @@ Start-ADSyncSyncCycle -PolicyType Delta
 netstat -ano | findstr :443
 
 # Today's audit log
-type C:\inetpub\martin-audit-app\server\logs\audit-2026-05-19.log
+type C:\inetpub\martin-audit-app\server\logs\audit-2026-06-10.log
 ```
