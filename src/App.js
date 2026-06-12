@@ -3,6 +3,7 @@ import { useTheme } from './config/ThemeContext';
 import MODULES from './config/modules';
 import { GlowDot, Badge } from './components/UI';
 import Sidebar from './components/Sidebar';
+import PatchNotesModal, { hasNewPatchNotes, markPatchNotesSeen } from './components/PatchNotesModal';
 import LoginPage from './pages/LoginPage';
 import PurchasesPage from './pages/PurchasesPage';
 import OrdersPage from './pages/OrdersPage';
@@ -94,6 +95,8 @@ export default function App() {
   const [connectionInfo, setConnectionInfo] = useState(null);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showPatchNotes, setShowPatchNotes] = useState(false);
+  const [hasNewNotes, setHasNewNotes] = useState(hasNewPatchNotes());
 
   const userRole = connectionInfo?.role || 'USERS';
 
@@ -164,6 +167,26 @@ export default function App() {
             }}>
               {userRole}
             </span>
+            <button
+              onClick={() => { setShowPatchNotes(true); setHasNewNotes(false); }}
+              style={{
+                position: 'relative', background: 'transparent',
+                border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
+                color: theme.colors.textMuted, padding: '4px 10px', fontSize: 11,
+                cursor: 'pointer', fontFamily: theme.fonts.body,
+              }}
+            >
+              Patch Notes
+              {hasNewNotes && (
+                <span style={{
+                  position: 'absolute', top: -6, right: -6,
+                  background: '#ef4444', color: '#fff', fontSize: 8, fontWeight: 700,
+                  padding: '1px 5px', borderRadius: 8, letterSpacing: '0.03em',
+                }}>
+                  NEW
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
@@ -173,6 +196,9 @@ export default function App() {
           {ActivePage && <ActivePage />}
         </div>
       </div>
+
+      {/* Patch Notes Modal */}
+      {showPatchNotes && <PatchNotesModal onClose={() => setShowPatchNotes(false)} />}
     </div>
   );
 }
