@@ -20,8 +20,9 @@ export default function useChangeSearch({
   csvRowMapper = null,
   exportFilename = 'changes',
 } = {}) {
+  const defaultFromDate = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
   const [changes, setChanges] = useState([]);
-  const [filters, setFilters] = useState({ fromDate: '', toDate: '', pono: '', whse: '', source: '', custno: '', prod: '', limit: '', includeNew: true });
+  const [filters, setFilters] = useState({ fromDate: defaultFromDate, toDate: '', pono: '', whse: '', source: '', custno: '', vendno: '', prod: '', limit: '', includeNew: true });
   const [sortCol, setSortCol] = useState('transdt');
   const [sortDir, setSortDir] = useState('desc');
   const [loading, setLoading] = useState(false);
@@ -81,13 +82,16 @@ export default function useChangeSearch({
       if (filters.source) searchFilters.source = filters.source;
       if (!filters.source) searchFilters.tables = defaultTables;
       if (filters.custno) searchFilters.custno = filters.custno.trim();
+      if (filters.vendno) searchFilters.vendno = filters.vendno.trim();
       if (filters.prod) searchFilters.prod = filters.prod.trim();
       if (filters.limit) searchFilters.limit = parseInt(filters.limit, 10);
       searchFilters.includeNew = filters.includeNew;
 
-      // Default to last 7 days if no specific search criteria entered and no limit set
-      if (!searchFilters.pono && !searchFilters.ponos && !searchFilters.fromDate && !searchFilters.custno && !searchFilters.prod && !searchFilters.limit) {
-        searchFilters.fromDate = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+      // If searching by a specific record and the date is still the default,
+      // drop the date filter so users get the full history for that record
+      const hasSpecificRecord = searchFilters.pono || searchFilters.ponos || searchFilters.custno || searchFilters.prod;
+      if (hasSpecificRecord && searchFilters.fromDate === defaultFromDate) {
+        delete searchFilters.fromDate;
       }
 
       const result = await searchChanges(searchFilters);
@@ -101,7 +105,7 @@ export default function useChangeSearch({
   }
 
   function handleClear() {
-    setFilters({ fromDate: '', toDate: '', pono: '', whse: '', source: '', custno: '', prod: '', limit: '', includeNew: true });
+    setFilters({ fromDate: '', toDate: '', pono: '', whse: '', source: '', custno: '', vendno: '', prod: '', limit: '', includeNew: true });
     setChanges([]);
     setError(null);
     setQueryInfo(null);

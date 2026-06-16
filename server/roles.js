@@ -84,6 +84,15 @@ const FINANCE_FIELDS = {
   icsw: ['avgcost', 'lastcost', 'replcost', 'stndcost'],
   // Product Master (ICSP)
   icsp: ['baseprice', 'listprice', 'prodcost', 'stndcost'],
+  // Product Line Setup (ICSL)
+  icsl: [
+    'discmult_1', 'discmult_2', 'discmult_3', 'discmult_4', 'discmult_5',
+    'discmult_6', 'discmult_7', 'discmult_8', 'discmult_9',
+    'tarbuyamt_1', 'tarbuyamt_2', 'tarbuyamt_3', 'tarbuyamt_4', 'tarbuyamt_5',
+    'tarbuyamt_6', 'tarbuyamt_7', 'tarbuyamt_8', 'tarbuyamt_9',
+    'termspct', 'termsdiscfl', 'safeallamt', 'safeallpct', 'safeallty',
+    'rcvtolpct', 'ickcost', 'icrcost', 'wtkcost', 'wtrcost',
+  ],
   // Inventory Transactions (ICET)
   icet: ['cost', 'origcost', 'icswcost'],
   // Physical Count Detail (ICSEP)

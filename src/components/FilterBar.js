@@ -14,6 +14,7 @@ export default function FilterBar({
   showWarehouse = false,
   showCustomer = false,
   showProduct = false,
+  showVendor = false,
 }) {
   const { theme } = useTheme();
   const inputStyle = {
@@ -25,7 +26,7 @@ export default function FilterBar({
     textTransform: 'uppercase', marginBottom: 4,
   };
 
-  const hasFilters = !!(filters.pono || filters.whse || filters.fromDate || filters.toDate || filters.source || filters.custno || filters.prod || (filters.limit && filters.limit !== '500'));
+  const hasFilters = !!(filters.pono || filters.whse || filters.fromDate || filters.toDate || filters.source || filters.custno || filters.vendno || filters.prod || (filters.limit && filters.limit !== '500'));
 
   return (
     <div style={{ background: theme.colors.bgCard, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.lg, padding: 20, marginBottom: 20 }}>
@@ -67,6 +68,16 @@ export default function FilterBar({
             <div style={labelStyle}>Customer #</div>
             <input placeholder="e.g. 308337" value={filters.custno || ''}
               onChange={e => setFilters(f => ({ ...f, custno: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && onSearch()}
+              style={{ ...inputStyle, fontFamily: theme.fonts.mono }} />
+          </div>
+        )}
+
+        {showVendor && (
+          <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
+            <div style={labelStyle}>Vendor #</div>
+            <input placeholder="e.g. 516998" value={filters.vendno || ''}
+              onChange={e => setFilters(f => ({ ...f, vendno: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && onSearch()}
               style={{ ...inputStyle, fontFamily: theme.fonts.mono }} />
           </div>

@@ -30,6 +30,9 @@ const TABLE_CONFIG = {
   icsp:  { recordKey: 'prod', suffixKey: null, lineKey: null, recordKeyType: 'string' },
   icsw:  { recordKey: 'prod', suffixKey: null, lineKey: 'whse', recordKeyType: 'string' },
 
+  // Product Line
+  icsl:  { recordKey: 'prodline', suffixKey: null, lineKey: 'whse', recordKeyType: 'string' },
+
   // Customers
   arsc:  { recordKey: 'custno', suffixKey: null, lineKey: null, recordKeyType: 'number' },
   arss:  { recordKey: 'custno', suffixKey: null, lineKey: 'shipto', recordKeyType: 'number' },
@@ -323,6 +326,72 @@ const TRACKED_FIELDS = {
     user17:      { label: 'User Defined 17', desc: 'User defined field' },
     user20:      { label: 'User Defined 20', desc: 'User defined field' },
     user21:      { label: 'User Defined 21', desc: 'User defined field' },
+  },
+
+  // ─── Product Line Setup (ICSL) ───
+
+  icsl: {
+    // ── Identification ──
+    prodline:    { label: 'Product Line', desc: 'Product line code' },
+    whse:        { label: 'Warehouse', desc: 'Warehouse' },
+    descrip:     { label: 'Description', desc: 'Product line description' },
+    buyer:       { label: 'Buyer', desc: 'Buyer code assigned to this product line' },
+    vendno:      { label: 'Vendor #', desc: 'Primary vendor number' },
+    shipfmno:    { label: 'Ship From #', desc: 'Ship from number' },
+    class:       { label: 'Product Class', desc: 'Product classification' },
+    operinit:    { label: 'Operator', desc: 'Operator who made the change' },
+    // ── Ordering / Replenishment ──
+    orderpt:     { label: 'Order Point', desc: 'Minimum inventory level before reorder is triggered' },
+    linept:      { label: 'Line Point', desc: 'Maximum inventory level' },
+    minbuy:      { label: 'Minimum Buy', desc: 'Minimum buy quantity or dollar amount' },
+    minbuytype:  { label: 'Min Buy Type', desc: 'Minimum buy type (D=Dollar, Q=Quantity)' },
+    leadtmavg:   { label: 'Lead Time Avg', desc: 'Average lead time in days' },
+    ordcalcty:   { label: 'Order Calc Type', desc: 'Order calculation type (E=EOQ, M=Min/Max, etc.)' },
+    usagectrl:   { label: 'Usage Control', desc: 'Usage control method' },
+    usagerate:   { label: 'Usage Rate', desc: 'Current usage rate' },
+    usgmths:     { label: 'Usage Months', desc: 'Number of months used for usage calculation' },
+    surplusty:   { label: 'Surplus Type', desc: 'How surplus inventory is handled' },
+    belowlpfl:   { label: 'Below Line Point', desc: 'Below line point flag' },
+    frozenfl:    { label: 'Frozen', desc: 'Frozen flag — prevents automatic replenishment changes' },
+    frozentype:  { label: 'Frozen Type', desc: 'Type of freeze applied' },
+    // ── Compliance ──
+    countryoforigin: { label: 'Country of Origin', desc: 'Country of origin code' },
+    tariffcd:    { label: 'Tariff Code', desc: 'Harmonized tariff code' },
+    taxablety:   { label: 'Taxable Type', desc: 'Tax calculation type' },
+    warrlength:  { label: 'Warranty Length', desc: 'Warranty length' },
+    warrtype:    { label: 'Warranty Type', desc: 'Warranty type (M=Months, etc.)' },
+    // ── ARP ──
+    arpwhse:     { label: 'ARP Warehouse', desc: 'Auto replenishment warehouse' },
+    arptype:     { label: 'ARP Type', desc: 'Auto replenishment type' },
+    // ── Costs & Pricing (FINANCE tier) ──
+    discmult_1:  { label: 'Discount Mult 1', desc: 'Discount multiplier level 1' },
+    discmult_2:  { label: 'Discount Mult 2', desc: 'Discount multiplier level 2' },
+    discmult_3:  { label: 'Discount Mult 3', desc: 'Discount multiplier level 3' },
+    discmult_4:  { label: 'Discount Mult 4', desc: 'Discount multiplier level 4' },
+    discmult_5:  { label: 'Discount Mult 5', desc: 'Discount multiplier level 5' },
+    discmult_6:  { label: 'Discount Mult 6', desc: 'Discount multiplier level 6' },
+    discmult_7:  { label: 'Discount Mult 7', desc: 'Discount multiplier level 7' },
+    discmult_8:  { label: 'Discount Mult 8', desc: 'Discount multiplier level 8' },
+    discmult_9:  { label: 'Discount Mult 9', desc: 'Discount multiplier level 9' },
+    tarbuyamt_1: { label: 'Target Buy Amt 1', desc: 'Target buy amount level 1' },
+    tarbuyamt_2: { label: 'Target Buy Amt 2', desc: 'Target buy amount level 2' },
+    tarbuyamt_3: { label: 'Target Buy Amt 3', desc: 'Target buy amount level 3' },
+    tarbuyamt_4: { label: 'Target Buy Amt 4', desc: 'Target buy amount level 4' },
+    tarbuyamt_5: { label: 'Target Buy Amt 5', desc: 'Target buy amount level 5' },
+    tarbuyamt_6: { label: 'Target Buy Amt 6', desc: 'Target buy amount level 6' },
+    tarbuyamt_7: { label: 'Target Buy Amt 7', desc: 'Target buy amount level 7' },
+    tarbuyamt_8: { label: 'Target Buy Amt 8', desc: 'Target buy amount level 8' },
+    tarbuyamt_9: { label: 'Target Buy Amt 9', desc: 'Target buy amount level 9' },
+    termspct:    { label: 'Terms %', desc: 'Terms discount percentage' },
+    termsdiscfl: { label: 'Terms Discount', desc: 'Terms discount flag' },
+    safeallamt:  { label: 'Safety Allow Amt', desc: 'Safety allowance amount' },
+    safeallpct:  { label: 'Safety Allow %', desc: 'Safety allowance percentage' },
+    safeallty:   { label: 'Safety Allow Type', desc: 'Safety allowance type' },
+    rcvtolpct:   { label: 'Receive Tolerance %', desc: 'Receiving tolerance percentage' },
+    ickcost:     { label: 'IC K Cost', desc: 'IC carrying cost factor' },
+    icrcost:     { label: 'IC R Cost', desc: 'IC reorder cost factor' },
+    wtkcost:     { label: 'WT K Cost', desc: 'WT carrying cost factor' },
+    wtrcost:     { label: 'WT R Cost', desc: 'WT reorder cost factor' },
   },
 
   // ─── Customer Master (ARSC) ───
