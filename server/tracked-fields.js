@@ -29,7 +29,7 @@ const TABLE_CONFIG = {
   // Product / Warehouse
   icsp:  { recordKey: 'prod', suffixKey: null, lineKey: null, recordKeyType: 'string' },
   icsw:  { recordKey: 'prod', suffixKey: null, lineKey: 'whse', recordKeyType: 'string' },
-
+  
   // Product Line
   icsl:  { recordKey: 'prodline', suffixKey: null, lineKey: 'whse', recordKeyType: 'string' },
 
@@ -212,6 +212,7 @@ const TRACKED_FIELDS = {
     user24:        { label: 'User Defined 24', desc: 'User defined field' },
     addressoverfl: { label: 'Address Override', desc: 'Address override flag — indicates the ship-to address was manually changed on this order' },
     ordersource:   { label: 'Order Source', desc: 'Source/origin of the order (e.g. EDI, web, manual entry)' },
+    longltdays:    { label: 'Long Lead Time Days', desc: 'Lead time in days for the longest lead time product on the order' },
   },
 
   oeel: {
@@ -249,6 +250,7 @@ const TRACKED_FIELDS = {
     binloc:      { label: 'Bin Location', desc: 'The bin location for the product. This field is loaded during picking when pick tickets are printed in bin location order.' },
     orderaltno:  { label: 'Related Order #', desc: 'The alternate order number indicates the PO/WT/work order number that the order entry order is tied to. This number is enterable on the extended screen of the line item. If the order is a pick up on the way, drop ship, or tie, the PO/WT number can be automatically generated when go is pressed from the line item. On a pick up on the way or tie line the PO/WT number can also be entered.' },
     ordertype:   { label: 'Order Type', desc: 'The order type of a line tie. This field indicates the source for filling the line item (a PO, WT, or work order).' },
+    leadtm:      { label: 'Lead Time', desc: 'Lead time in days for this line item' },
     // ── Cost ──
     vendno:      { label: 'Vendor Number', desc: 'The vendno field describes the source vendor for the line item. On a stocked product, it is loaded from the ICSW ARP vendor (regardless of the ARP type). On a non-stock product, it is loaded from the vendor entered on the non-stock screen. For a special order item, non-stock, or line drop, this field may duplicate oeel.arpvendno.' },
     commcost:    { label: 'Commission Cost', desc: 'The commission cost. This is the product cost used in the commission calculation. It is loaded on the line in OEEPI based on the ICAO settings for commission cost.' },
@@ -312,6 +314,11 @@ const TRACKED_FIELDS = {
     stndcost:    { label: 'Standard Cost', desc: 'Standard cost for this product' },
     orderpt:     { label: 'Min (Order Point)', desc: 'Order Point. Check dictionary for more info.' },
     linept:      { label: 'Max (Line Point)', desc: 'Line Point for ordering controls. Check dictionary for more info.' },
+    leadtmavg:   { label: 'Lead Time Avg', desc: 'The average lead time for this product in days.' },
+    leadtmlast:  { label: 'Lead Time Last', desc: 'Last recorded lead time in days' },
+    leadtmprio:  { label: 'Lead Time Prior', desc: 'Prior lead time before the last change' },
+    avgltdt:     { label: 'Avg LT Date', desc: 'The average lead time date represents the last time that an average lead time was calculated.' },
+    lastltdt:    { label: 'Last LT Date', desc: 'Indicates the date of the last lead time for this product.' },
     binloc1:     { label: 'Bin Loc #1', desc: 'First bin location for this product. Format: BB/RR/SSS/FFF (Building/Row/Section/Shelf)' },
     binloc2:     { label: 'Bin Loc #2', desc: 'Second bin location for this product. Format: BB/RR/SSS/FFF (Building/Row/Section/Shelf)' },
     bintype:     { label: 'Bin Type', desc: 'Bin type designation' },
@@ -327,7 +334,7 @@ const TRACKED_FIELDS = {
     user20:      { label: 'User Defined 20', desc: 'User defined field' },
     user21:      { label: 'User Defined 21', desc: 'User defined field' },
   },
-
+  
   // ─── Product Line Setup (ICSL) ───
 
   icsl: {
