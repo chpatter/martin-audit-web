@@ -4,6 +4,7 @@ import MODULES from './config/modules';
 import { GlowDot, Badge } from './components/UI';
 import Sidebar from './components/Sidebar';
 import PatchNotesModal, { hasNewPatchNotes, markPatchNotesSeen } from './components/PatchNotesModal';
+import UpdateBanner from './components/UpdateBanner';
 import LoginPage from './pages/LoginPage';
 import PurchasesPage from './pages/PurchasesPage';
 import OrdersPage from './pages/OrdersPage';
@@ -130,10 +131,12 @@ export default function App() {
     ? null : PAGE_MAP[activeModule];
 
   return (
-    <div style={{
-      display: 'flex', height: '100vh', background: theme.colors.bg,
-      color: theme.colors.text, fontFamily: theme.fonts.body, overflow: 'hidden',
-    }}>
+    <>
+      <UpdateBanner />
+      <div style={{
+        display: 'flex', height: '100vh', background: theme.colors.bg,
+        color: theme.colors.text, fontFamily: theme.fonts.body, overflow: 'hidden',
+      }}>
       <Sidebar
         activeModule={activeModule}
         onModuleChange={setActiveModule}
@@ -200,5 +203,6 @@ export default function App() {
       {/* Patch Notes Modal */}
       {showPatchNotes && <PatchNotesModal onClose={() => setShowPatchNotes(false)} />}
     </div>
+    </>
   );
 }

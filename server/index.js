@@ -319,6 +319,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/api/version', (req, res) => {
+  const pkg = require('../package.json');
+  res.json({ version: pkg.version });
+});
+
 app.get('/api/auth/status', async (req, res) => {
   const authed = await ensureAuthenticated();
   res.json({
