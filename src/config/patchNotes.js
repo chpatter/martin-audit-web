@@ -19,6 +19,7 @@ const PATCH_NOTES = [
     date: '2026-06-10',
     title: 'Inventory Module & Field Expansion',
     changes: [
+      { type: 'added', text: 'Version check. A popup will alert the user to refresh the page if the current version is out of date' },
       { type: 'added', text: 'Inventory module — ICET (Transactions), ICSEP (Physical Counts), ICSET (Count Tickets)' },
       { type: 'added', text: 'Bin Location #1, Bin Location #2, and Bin Type fields to Prod/Whse (ICSW)' },
       { type: 'added', text: 'User Defined fields 1–24 added to Transfer Lines (WTEL)' },

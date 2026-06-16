@@ -13,20 +13,21 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Pull latest code
+      - name: Sync latest code
         run: |
           cd C:\inetpub\martin-audit-app
-          git pull origin main
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: Install frontend dependencies
         run: |
           cd C:\inetpub\martin-audit-app
-          npm install
+          npm ci
 
       - name: Install backend dependencies
         run: |
           cd C:\inetpub\martin-audit-app\server
-          npm install
+          npm ci
 
       - name: Build frontend
         run: |
