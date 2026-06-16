@@ -4,6 +4,7 @@
  * Fetches and caches:
  *   - Vendor names from Compass Data Lake (apsv table)
  *   - Customer names from Compass Data Lake (arsc table)
+ *   - Sales rep names from Compass Data Lake (smsn table)
  *   - Operator names from SXe API (sasogetoperatorlist endpoint)
  *
  * All caches refresh every hour. Operator list loads in a single API call.
@@ -16,9 +17,11 @@ const CACHE_TTL = 3600000; // 1 hour
 let vendorCache = {};
 let customerCache = {};
 let operatorCache = {};
+let salesRepCache = {};
 let vendorCacheTime = 0;
 let customerCacheTime = 0;
 let operatorCacheTime = 0;
+let salesRepCacheTime = 0;
 
 /**
  * Load vendor names from apsv table via Compass
@@ -77,6 +80,34 @@ async function loadCustomers(compass) {
 }
 
 /**
+ * Load sales rep names from smsn table via Compass
+ */
+async function loadSalesReps(compass) {
+  if (Date.now() - salesRepCacheTime < CACHE_TTL && Object.keys(salesRepCache).length > 0) {
+    return salesRepCache;
+  }
+
+  try {
+    console.log('[LOOKUP] Loading sales rep names from smsn...');
+    const rows = await compass.query("SELECT slsrep, name FROM smsn", { limit: 50000 });
+
+    salesRepCache = {};
+    if (Array.isArray(rows)) {
+      for (const row of rows) {
+        const rep = String(row.slsrep || '').replace(/\.0+$/, '').trim();
+        if (rep) salesRepCache[rep] = row.name || '';
+      }
+    }
+    salesRepCacheTime = Date.now();
+    console.log(`[LOOKUP] Cached ${Object.keys(salesRepCache).length} sales reps`);
+  } catch (err) {
+    console.error('[LOOKUP] Failed to load sales reps:', err.message);
+  }
+
+  return salesRepCache;
+}
+
+/**
  * Load operator names from SXe API (single call returns all operators)
  * @param {object} config - Server config with ionBase, tenantId
  * @param {object} tokenCache - Token cache with accessToken, apiToken
@@ -125,9 +156,23 @@ async function loadOperators(config, tokenCache) {
 }
 
 /**
- * Enrich change records with vendor/customer/operator display names
+ * Enrich change records with vendor/customer/operator display names,
+ * and inline-enrich sales rep and buyer field values.
  */
-function enrichChanges(changes, vendors, customers, operators) {
+
+// Fields where values should be enriched with sales rep names
+const SALES_REP_FIELDS = ['slsrepin', 'slsrepout'];
+// Fields where values should be enriched with operator/buyer names
+const BUYER_FIELDS = ['buyer'];
+
+function enrichValue(val, cache) {
+  const clean = String(val || '').replace(/\.0+$/, '').trim();
+  if (!clean || clean === 'New' || clean === '(empty)') return val;
+  const name = cache[clean];
+  return name ? `${clean} (${name})` : val;
+}
+
+function enrichChanges(changes, vendors, customers, operators, salesReps) {
   return changes.map(change => {
     const vendno = String(change.vendno || '').replace(/\.0+$/, '');
     const vendName = vendors[vendno] || '';
@@ -136,13 +181,33 @@ function enrichChanges(changes, vendors, customers, operators) {
     const operCode = String(change.oper || '').trim().toUpperCase();
     const operName = operators[operCode] || '';
 
-    return {
+    const enriched = {
       ...change,
       vendname: vendName ? `${vendName} (${vendno})` : vendno || '',
       custname: custName ? `${custName} (${custno})` : custno || '',
       opername: operName ? `${operName} (${operCode})` : operCode || '',
       effectiveEnd: '12/31/2046 12:00 AM',
     };
+
+    // Inline-enrich sales rep fields (new_value and old_value)
+    if (SALES_REP_FIELDS.includes(change.field_name)) {
+      enriched.new_value = enrichValue(change.new_value, salesReps || {});
+      enriched.old_value = enrichValue(change.old_value, salesReps || {});
+    }
+
+    // Inline-enrich buyer fields (use operator cache since buyer = operator code)
+    if (BUYER_FIELDS.includes(change.field_name)) {
+      const enrichBuyer = (val) => {
+        const clean = String(val || '').trim().toUpperCase();
+        if (!clean || clean === 'NEW' || clean === '(EMPTY)') return val;
+        const name = operators[clean];
+        return name ? `${clean} (${name})` : val;
+      };
+      enriched.new_value = enrichBuyer(change.new_value);
+      enriched.old_value = enrichBuyer(change.old_value);
+    }
+
+    return enriched;
   });
 }
 
@@ -157,6 +222,7 @@ async function preloadCaches(compass, config, tokenCache) {
   await Promise.all([
     loadVendors(compass),
     loadCustomers(compass),
+    loadSalesReps(compass),
     loadOperators(config, tokenCache),
   ]);
 }
@@ -164,6 +230,7 @@ async function preloadCaches(compass, config, tokenCache) {
 module.exports = {
   loadVendors,
   loadCustomers,
+  loadSalesReps,
   loadOperators,
   enrichChanges,
   preloadCaches,

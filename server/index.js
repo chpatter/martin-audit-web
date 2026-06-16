@@ -23,7 +23,7 @@ const fetch = require('node-fetch');
 const CompassClient = require('./compass');
 const { processVariations } = require('./changes');
 const { getTableConfig } = require('./tracked-fields');
-const { loadVendors, loadCustomers, loadOperators, enrichChanges, preloadCaches } = require('./lookups');
+const { loadVendors, loadCustomers, loadSalesReps, loadOperators, enrichChanges, preloadCaches } = require('./lookups');
 const { initAD, adAuthMiddleware } = require('./auth-ad');
 const { maskChanges, filterTablesByRole } = require('./roles');
 const { auditMiddleware } = require('./audit-log');
@@ -235,7 +235,7 @@ async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whs
   if (whses && whses.length > 0) sql += ` AND whse IN (${whses.map(w => `'${sanitize(w)}'`).join(', ')})`;
 
   // Only apply column filters to tables that have them
-  const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv', 'icsl'];
+  const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv'];
   const TABLES_WITH_CUSTNO = ['arsc', 'arss', 'oeeh', 'oeel', 'pdsc'];
   const TABLES_WITH_PROD   = ['poel', 'oeel', 'icsp', 'icsw', 'icsc', 'pdsc', 'pdsv'];
 
@@ -290,10 +290,10 @@ function processTableRows(table, rows) {
 // ─── Helper: Enrich changes with lookup names ───
 
 async function enrich(changes) {
-  const [vendors, customers, operators] = await Promise.all([
-    loadVendors(compass), loadCustomers(compass), loadOperators(config, tokenCache),
+  const [vendors, customers, salesReps, operators] = await Promise.all([
+    loadVendors(compass), loadCustomers(compass), loadSalesReps(compass), loadOperators(config, tokenCache),
   ]);
-  return enrichChanges(changes, vendors, customers, operators);
+  return enrichChanges(changes, vendors, customers, operators, salesReps);
 }
 
 // ─── Routes: Cancel ───
