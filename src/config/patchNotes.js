@@ -15,6 +15,23 @@
 
 const PATCH_NOTES = [
   {
+    version: '1.0.2',
+    date: '2026-06-17',
+    title: 'Product Line Module, Name Enrichment & Lead Times',
+    changes: [
+      { type: 'added', text: 'Product Line module (ICSL) — new page for product line setup changes with Product Line, Warehouse, and Vendor # search fields' },
+      { type: 'added', text: 'Sales rep name enrichment — slsrepin/slsrepout values now show rep names (e.g. 2812 → 2812 (NATE SCHLICHTING))' },
+      { type: 'added', text: 'Buyer code enrichment — buyer values now show operator names (e.g. KP01 → KP01 (KIMBERLY PRODAN))' },
+      { type: 'added', text: 'Vendor # search filter — available on Product Line page for filtering by vendor number' },
+      { type: 'added', text: 'Lead time fields added to ICSW — average, last, prior lead times, avg/last LT dates, freeze LT type' },
+      { type: 'added', text: 'Lead time fields added to Orders — OEEH long lead time days, OEEL line-level lead time' },
+      { type: 'added', text: 'Patch Notes modal — version history with sidebar navigation, color-coded change types' },
+      { type: 'added', text: 'Update banner — automatically detects new versions and prompts users to refresh' },
+      { type: 'added', text: 'CI/CD auto-deploy — merging to main branch triggers automatic build and deploy via GitHub Actions' },
+      { type: 'changed', text: 'Start date now defaults to 7 days ago (visible in search bar). Clears fully when Clear is clicked' },
+    ],
+  },
+  {
     version: '1.0.1',
     date: '2026-06-10',
     title: 'Inventory Module & Field Expansion',
