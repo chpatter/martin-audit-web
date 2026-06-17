@@ -20,8 +20,8 @@ const PATCH_NOTES = [
     title: 'Product Line Module, Name Enrichment & Lead Times',
     changes: [
       { type: 'added', text: 'Product Line module (ICSL) — new page for product line setup changes with Product Line, Warehouse, and Vendor # search fields' },
-      { type: 'added', text: 'Sales rep name enrichment — slsrepin/slsrepout values now show rep names (e.g. 2812 → 2812 (NATE SCHLICHTING))' },
-      { type: 'added', text: 'Buyer code enrichment — buyer values now show operator names (e.g. KP01 → KP01 (KIMBERLY PRODAN))' },
+      { type: 'added', text: 'Sales rep name enrichment — slsrepin/slsrepout values now show rep names (e.g. 0000 → 0000 (FIRSTNAME LASTNAME))' },
+      { type: 'added', text: 'Buyer code enrichment — buyer values now show operator names (e.g. TV01 → TV01 (THEO VON))' },
       { type: 'added', text: 'Vendor # search filter — available on Product Line page for filtering by vendor number' },
       { type: 'added', text: 'Lead time fields added to ICSW — average, last, prior lead times, avg/last LT dates, freeze LT type' },
       { type: 'added', text: 'Lead time fields added to Orders — OEEH long lead time days, OEEL line-level lead time' },
@@ -29,6 +29,7 @@ const PATCH_NOTES = [
       { type: 'added', text: 'Update banner — automatically detects new versions and prompts users to refresh' },
       { type: 'added', text: 'CI/CD auto-deploy — merging to main branch triggers automatic build and deploy via GitHub Actions' },
       { type: 'changed', text: 'Start date now defaults to 7 days ago (visible in search bar). Clears fully when Clear is clicked' },
+      { type: 'fixed', text: 'Enter key now triggers search from all input fields (warehouse, dates, limit were missing)' }
     ],
   },
   {
