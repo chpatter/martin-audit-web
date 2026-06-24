@@ -235,7 +235,7 @@ async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whs
   if (whses && whses.length > 0) sql += ` AND whse IN (${whses.map(w => `'${sanitize(w)}'`).join(', ')})`;
 
   // Only apply column filters to tables that have them
-  const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv'];
+  const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv', 'icsl'];
   const TABLES_WITH_CUSTNO = ['arsc', 'arss', 'oeeh', 'oeel', 'pdsc'];
   const TABLES_WITH_PROD   = ['poel', 'oeel', 'icsp', 'icsw', 'icsc', 'pdsc', 'pdsv'];
 
