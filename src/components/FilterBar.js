@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../config/ThemeContext';
 import OperatorSelect from './OperatorSelect';
+import BuyerSelect from './BuyerSelect';
 import InfoTip from './InfoTip';
 
 /**
@@ -110,12 +111,13 @@ export default function FilterBar({
         )}
 
         {showBuyer && (
-          <div style={{ display: 'flex', flexDirection: 'column', width: 130 }}>
-            <div style={labelStyle}>Buyer <InfoTip text="Filter by buyer code (operator initials assigned as buyer)" /></div>
-            <input placeholder="e.g. KP01" value={filters.buyer || ''}
-              onChange={e => setFilters(f => ({ ...f, buyer: e.target.value }))}
-              onKeyDown={e => e.key === 'Enter' && onSearch()}
-              style={{ ...inputStyle, fontFamily: theme.fonts.mono }} />
+          <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
+            <div style={labelStyle}>Buyer <InfoTip text="Filter by buyer code — search by buyer initials or name" /></div>
+            <BuyerSelect
+              value={filters.buyer || ''}
+              onChange={val => setFilters(f => ({ ...f, buyer: val }))}
+              onSearch={onSearch}
+            />
           </div>
         )}
 

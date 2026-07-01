@@ -23,7 +23,7 @@ const fetch = require('node-fetch');
 const CompassClient = require('./compass');
 const { processVariations } = require('./changes');
 const { getTableConfig } = require('./tracked-fields');
-const { loadVendors, loadCustomers, loadSalesReps, loadOperators, enrichChanges, preloadCaches } = require('./lookups');
+const { loadVendors, loadCustomers, loadSalesReps, loadOperators, loadBuyers, enrichChanges, preloadCaches } = require('./lookups');
 const { initAD, adAuthMiddleware } = require('./auth-ad');
 const { maskChanges, filterTablesByRole } = require('./roles');
 const { auditMiddleware } = require('./audit-log');
@@ -296,10 +296,10 @@ function processTableRows(table, rows) {
 // ─── Helper: Enrich changes with lookup names ───
 
 async function enrich(changes) {
-  const [vendors, customers, salesReps, operators] = await Promise.all([
-    loadVendors(compass), loadCustomers(compass), loadSalesReps(compass), loadOperators(config, tokenCache),
+  const [vendors, customers, salesReps, operators, buyers] = await Promise.all([
+    loadVendors(compass), loadCustomers(compass), loadSalesReps(compass), loadOperators(config, tokenCache), loadBuyers(config, tokenCache),
   ]);
-  return enrichChanges(changes, vendors, customers, operators, salesReps);
+  return enrichChanges(changes, vendors, customers, operators, salesReps, buyers);
 }
 
 // ─── Routes: Cancel ───
@@ -335,6 +335,14 @@ app.get('/api/operators', async (req, res) => {
   const list = Object.entries(operators)
     .map(([code, name]) => ({ code, name }))
     .filter(op => !op.name.match(/^X\s/i))
+    .sort((a, b) => a.code.localeCompare(b.code));
+  res.json(list);
+});
+
+app.get('/api/buyers', async (req, res) => {
+  const buyers = await loadBuyers(config, tokenCache);
+  const list = Object.entries(buyers)
+    .map(([code, name]) => ({ code, name }))
     .sort((a, b) => a.code.localeCompare(b.code));
   res.json(list);
 });
@@ -513,6 +521,7 @@ const SXE_ALLOWED_PATHS = [
   'asaborepositoryquery',
   'asaborepositoryinquiry',
   'asaborestservice',
+  'api',
 ];
 
 app.post('/api/sxe/*', async (req, res) => {

@@ -18,10 +18,12 @@ let vendorCache = {};
 let customerCache = {};
 let operatorCache = {};
 let salesRepCache = {};
+let buyerCache = {};
 let vendorCacheTime = 0;
 let customerCacheTime = 0;
 let operatorCacheTime = 0;
 let salesRepCacheTime = 0;
+let buyerCacheTime = 0;
 
 /**
  * Load vendor names from apsv table via Compass
@@ -156,6 +158,56 @@ async function loadOperators(config, tokenCache) {
 }
 
 /**
+ * Load buyer names from SASTT table via SXe API
+ */
+async function loadBuyers(config, tokenCache) {
+  if (Date.now() - buyerCacheTime < CACHE_TTL && Object.keys(buyerCache).length > 0) {
+    return buyerCache;
+  }
+
+  try {
+    console.log('[LOOKUP] Loading buyer names from SXe API...');
+    const url = `${config.ionBase}/${config.tenantId}/SX/webuiserviceinterface/sxeapi/api/sa/assasetup/sasttloadtabledata`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+        'Authorization': `Bearer ${tokenCache.accessToken}`,
+        'Token': tokenCache.apiToken,
+      },
+      body: JSON.stringify({
+        sasttcodes: { codeid: 'B', filename: 'a' },
+        sasttsearchcriteria: {},
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`SXe buyer list failed (${res.status}): ${errText.substring(0, 200)}`);
+    }
+
+    const data = await res.json();
+
+    buyerCache = {};
+    const entries = Array.isArray(data) ? data : Object.values(data);
+    for (const entry of entries) {
+      if (!entry || typeof entry !== 'object') continue;
+      const code = String(entry.codechar || '').trim().toUpperCase();
+      const name = entry.descrip || '';
+      if (code) buyerCache[code] = name;
+    }
+    buyerCacheTime = Date.now();
+    console.log(`[LOOKUP] Cached ${Object.keys(buyerCache).length} buyers`);
+  } catch (err) {
+    console.error('[LOOKUP] Failed to load buyers:', err.message);
+  }
+
+  return buyerCache;
+}
+
+/**
  * Enrich change records with vendor/customer/operator display names,
  * and inline-enrich sales rep and buyer field values.
  */
@@ -172,7 +224,7 @@ function enrichValue(val, cache) {
   return name ? `${clean} (${name})` : val;
 }
 
-function enrichChanges(changes, vendors, customers, operators, salesReps) {
+function enrichChanges(changes, vendors, customers, operators, salesReps, buyers) {
   return changes.map(change => {
     const vendno = String(change.vendno || '').replace(/\.0+$/, '');
     const vendName = vendors[vendno] || '';
@@ -195,12 +247,12 @@ function enrichChanges(changes, vendors, customers, operators, salesReps) {
       enriched.old_value = enrichValue(change.old_value, salesReps || {});
     }
 
-    // Inline-enrich buyer fields (use operator cache since buyer = operator code)
+    // Inline-enrich buyer fields (use buyer cache from SASTT)
     if (BUYER_FIELDS.includes(change.field_name)) {
       const enrichBuyer = (val) => {
         const clean = String(val || '').trim().toUpperCase();
         if (!clean || clean === 'NEW' || clean === '(EMPTY)') return val;
-        const name = operators[clean];
+        const name = (buyers || {})[clean];
         return name ? `${clean} (${name})` : val;
       };
       enriched.new_value = enrichBuyer(change.new_value);
@@ -224,6 +276,7 @@ async function preloadCaches(compass, config, tokenCache) {
     loadCustomers(compass),
     loadSalesReps(compass),
     loadOperators(config, tokenCache),
+    loadBuyers(config, tokenCache),
   ]);
 }
 
@@ -232,6 +285,7 @@ module.exports = {
   loadCustomers,
   loadSalesReps,
   loadOperators,
+  loadBuyers,
   enrichChanges,
   preloadCaches,
 };
