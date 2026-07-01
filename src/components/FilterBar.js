@@ -18,6 +18,8 @@ export default function FilterBar({
   showCustomer = false,
   showProduct = false,
   showVendor = false,
+  showBuyer = false,
+  showShipTo = false,
   showOperator = false,
   recordAsOperator = false,
 }) {
@@ -31,7 +33,7 @@ export default function FilterBar({
     textTransform: 'uppercase', marginBottom: 4,
   };
 
-  const hasFilters = !!(filters.pono || filters.whse || filters.fromDate || filters.toDate || filters.source || filters.custno || filters.vendno || filters.operinit || filters.prod || (filters.limit && filters.limit !== '500'));
+  const hasFilters = !!(filters.pono || filters.whse || filters.fromDate || filters.toDate || filters.source || filters.custno || filters.vendno || filters.operinit || filters.buyer || filters.shipto || filters.prod || (filters.limit && filters.limit !== '500'));
 
   return (
     <div style={{ background: theme.colors.bgCard, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.lg, padding: 20, marginBottom: 20 }}>
@@ -102,6 +104,26 @@ export default function FilterBar({
             <div style={labelStyle}>Vendor # <InfoTip text="Filter by vendor number" /></div>
             <input placeholder="e.g. 516998" value={filters.vendno || ''}
               onChange={e => setFilters(f => ({ ...f, vendno: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && onSearch()}
+              style={{ ...inputStyle, fontFamily: theme.fonts.mono }} />
+          </div>
+        )}
+
+        {showBuyer && (
+          <div style={{ display: 'flex', flexDirection: 'column', width: 130 }}>
+            <div style={labelStyle}>Buyer <InfoTip text="Filter by buyer code (operator initials assigned as buyer)" /></div>
+            <input placeholder="e.g. KP01" value={filters.buyer || ''}
+              onChange={e => setFilters(f => ({ ...f, buyer: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && onSearch()}
+              style={{ ...inputStyle, fontFamily: theme.fonts.mono }} />
+          </div>
+        )}
+
+        {showShipTo && (
+          <div style={{ display: 'flex', flexDirection: 'column', width: 130 }}>
+            <div style={labelStyle}>Ship To # <InfoTip text="Filter by ship-to location number" /></div>
+            <input placeholder="e.g. 1000" value={filters.shipto || ''}
+              onChange={e => setFilters(f => ({ ...f, shipto: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && onSearch()}
               style={{ ...inputStyle, fontFamily: theme.fonts.mono }} />
           </div>

@@ -28,6 +28,9 @@ const PATCH_NOTES = [
       { type: 'changed', text: 'Operator dropdown filters out deactivated accounts (names prefixed with X)' },
       { type: 'changed', text: 'Operator ID and Security operator fields are now case-insensitive (auto-uppercased)' },
       { type: 'changed', text: 'Timestamps now display in the user\'s local timezone (converted from server Central Time)' },
+      { type: 'added', text: 'Vendor # search added to Catalog and Purchases modules' },
+      { type: 'added', text: 'Buyer search added to Purchases module — filter POs by buyer code' },
+      { type: 'added', text: 'Ship To # search added to Orders module — filter orders by ship-to location' },
     ],
   },
   {

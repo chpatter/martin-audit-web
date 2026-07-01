@@ -85,7 +85,7 @@ export default function CatalogPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Catalog #" recordPlaceholder="1000056, 1000057" sourceOptions={SOURCE_OPTIONS}
-        showOperator
+        showVendor showOperator
       />
 
       {error && (

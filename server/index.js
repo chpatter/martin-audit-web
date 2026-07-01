@@ -209,7 +209,7 @@ async function ensureAuthenticated() {
 
 // ─── Helper: Run allvariations query for a table with filters ───
 
-async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit } = {}) {
+async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit, buyer, shipto } = {}) {
   const cfg = getTableConfig(table);
   const t = table.toLowerCase();
   let sql = `SELECT * FROM infor.allvariations('${sanitize(table)}') WHERE 1=1`;
@@ -237,13 +237,17 @@ async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whs
   if (operinit) sql += ` AND operinit = '${sanitize(operinit).toUpperCase()}'`;
 
   // Only apply column filters to tables that have them
-  const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv', 'icsl'];
+  const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv', 'icsl', 'icsc'];
   const TABLES_WITH_CUSTNO = ['arsc', 'arss', 'oeeh', 'oeel', 'pdsc'];
   const TABLES_WITH_PROD   = ['poel', 'oeel', 'icsp', 'icsw', 'icsc', 'pdsc', 'pdsv'];
+  const TABLES_WITH_BUYER  = ['poeh', 'poel', 'icsl'];
+  const TABLES_WITH_SHIPTO = ['oeeh', 'oeel', 'arss'];
 
   if (vendno && TABLES_WITH_VENDNO.includes(t)) { const n = sanitizeNum(vendno); if (n !== null) sql += ` AND vendno = ${n}`; }
   if (custno && TABLES_WITH_CUSTNO.includes(t)) { const n = sanitizeNum(custno); if (n !== null) sql += ` AND custno = ${n}`; }
   if (prod && TABLES_WITH_PROD.includes(t)) sql += ` AND prod = '${sanitize(prod)}'`;
+  if (buyer && TABLES_WITH_BUYER.includes(t)) sql += ` AND buyer = '${sanitize(buyer).toUpperCase()}'`;
+  if (shipto && TABLES_WITH_SHIPTO.includes(t)) sql += ` AND shipto = '${sanitize(shipto)}'`;
 
   console.log(`[QUERY] ${sql}`);
 
@@ -439,7 +443,7 @@ app.post('/api/changes/search', async (req, res) => {
     const authed = await ensureAuthenticated();
     if (!authed) return res.status(503).json({ message: 'Not connected to Infor' });
 
-    const { fromDate, toDate, pono, posuf, ponos, whse, whses, vendno, custno, prod, operinit, limit, source, tables: requestedTables, includeNew = true } = req.body;
+    const { fromDate, toDate, pono, posuf, ponos, whse, whses, vendno, custno, prod, operinit, buyer, shipto, limit, source, tables: requestedTables, includeNew = true } = req.body;
     console.log(`[CHANGES] Search: pono=${pono || 'any'} ponos=${ponos ? ponos.length + ' records' : 'none'} custno=${custno || 'any'} prod=${prod || 'any'} limit=${limit || 'none'} source=${source || 'all'} from=${fromDate || 'any'} to=${toDate || 'any'}`);
 
     // Reset cancel flag for new search
@@ -455,7 +459,7 @@ app.post('/api/changes/search', async (req, res) => {
       // Multiple records — run a separate query per record to avoid slow IN clauses on allvariations
       for (const entry of ponos) {
         if (compass.cancelled) break;
-        const filters = { pono: entry.pono, posuf: entry.posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit };
+        const filters = { pono: entry.pono, posuf: entry.posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit, buyer, shipto };
         for (const table of tables) {
           if (compass.cancelled) break;
           const rows = await queryVariations(table, filters);
@@ -464,7 +468,7 @@ app.post('/api/changes/search', async (req, res) => {
       }
     } else {
       // Single record or date range search
-      const filters = { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit };
+      const filters = { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit, buyer, shipto };
       for (const table of tables) {
         if (compass.cancelled) break;
         const rows = await queryVariations(table, filters);
