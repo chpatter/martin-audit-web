@@ -325,6 +325,15 @@ app.get('/api/version', (req, res) => {
   res.json({ version: pkg.version });
 });
 
+app.get('/api/operators', async (req, res) => {
+  const operators = await loadOperators(config, tokenCache);
+  const list = Object.entries(operators)
+    .map(([code, name]) => ({ code, name }))
+    .filter(op => !op.name.match(/^X\s/i))
+    .sort((a, b) => a.code.localeCompare(b.code));
+  res.json(list);
+});
+
 app.get('/api/auth/status', async (req, res) => {
   const authed = await ensureAuthenticated();
   res.json({

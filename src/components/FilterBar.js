@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../config/ThemeContext';
+import OperatorSelect from './OperatorSelect';
 
 /**
  * Filter bar for audit change pages.
@@ -96,12 +97,13 @@ export default function FilterBar({
         )}
 
         {showOperator && (
-          <div style={{ display: 'flex', flexDirection: 'column', width: 130 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
             <div style={labelStyle}>Operator ID</div>
-            <input placeholder="e.g. CP01" value={filters.operinit || ''}
-              onChange={e => setFilters(f => ({ ...f, operinit: e.target.value }))}
-              onKeyDown={e => e.key === 'Enter' && onSearch()}
-              style={{ ...inputStyle, fontFamily: theme.fonts.mono }} />
+            <OperatorSelect
+              value={filters.operinit || ''}
+              onChange={val => setFilters(f => ({ ...f, operinit: val }))}
+              onSearch={onSearch}
+            />
           </div>
         )}
 
