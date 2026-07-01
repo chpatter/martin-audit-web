@@ -74,7 +74,7 @@ function csvRowMapper(row) {
 export default function PricingVendPage() {
   const { theme } = useTheme();
   const {
-    changes, filters, setFilters, sortCol, sortDir, loading, error, queryInfo,
+    changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
     expandedRow, setExpandedRow, resultFilter, setResultFilter,
     columnFilters, columnFiltersOpen, setColumnFiltersOpen, handleColumnFilterChange,
     sortedChanges, handleSearch, handleClear, handleCancel, handleSort, handleExportCSV,
@@ -125,7 +125,8 @@ export default function PricingVendPage() {
       )}
 
       <ChangesTable data={sortedChanges} columns={COLUMNS} sortCol={sortCol} sortDir={sortDir} onSort={handleSort}
-        expandedRow={expandedRow} onToggleExpand={key => setExpandedRow(expandedRow === key ? null : key)} />
+        expandedRow={expandedRow} onToggleExpand={key => setExpandedRow(expandedRow === key ? null : key)}
+        loading={loading} hasSearched={hasSearched} />
     </>
   );
 }

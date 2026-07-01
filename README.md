@@ -1,6 +1,6 @@
 # ▶ Martin Audit System
 
-**CloudSuite Distribution Audit Log Viewer** — An internal web application that tracks field-level changes across 11 modules in Infor CloudSuite SXe. Built to replace Agile Dragon's Dragon Pack Audit.
+**CloudSuite Distribution Audit Log Viewer** — An internal web application that tracks field-level changes across 12 modules in Infor CloudSuite SXe. Built to replace Agile Dragon's Dragon Pack Audit.
 
 Users browse to `https://audit.martinsupply.com` and Windows SSO handles the rest — no login screen, no credentials, no installs.
 
@@ -43,11 +43,12 @@ IIS handles authentication via Kerberos/NTLM, serves the React frontend as stati
 | **Catalog** | ICSC | 50 | Product catalog — pricing, descriptions, vendor info, UOM |
 | **Customers** | ARSC, ARSS | 45 + 45 | Customer master and ship-to records — address, terms, reps, credit |
 | **Inventory** | ICET, ICSEP, ICSET | 34 + 31 + 23 | Transactions, cycle counts, adjustments, count tickets |
-| **Orders** | OEEH, OEEL | 65 + 55 | Sales order headers and lines — stage, pricing, quantities, ship-to |
+| **Orders** | OEEH, OEEL | 66 + 56 | Sales order headers and lines — stage, pricing, quantities, ship-to |
 | **Pricing-Customer** | PDSC | 77 | Customer price/discount records — multipliers, qty breaks, contracts |
 | **Pricing-Vendor** | PDSV | 44 | Vendor cost agreements and pricing |
-| **Prod/Whse** | ICSP, ICSW | 16 + 23 | Product master and warehouse-level settings, bin locations |
-| **Purchases** | POEH, POEL | 33 + 23 | Purchase order headers and lines — stage, dates, costs, quantities |
+| **Prod/Whse** | ICSP, ICSW | 16 + 28 | Product master and warehouse-level settings, bin locations, lead times |
+| **Prod Line** | ICSL | 56 | Product line setup — buyers, vendors, ordering parameters, discounts |
+| **Purchases** | POEH, POEL | 34 + 23 | Purchase order headers and lines — stage, dates, costs, quantities |
 | **Security** | SASOO, PV_USER, PV_SECURE, AUTHSECURE | 90 + 46 + 3 + 10 | Operator permissions, function security (Admin only) |
 | **Transfers** | WTEH, WTEL | 24 + 46 | Warehouse transfer headers and lines — stage, dates, quantities, bin locations |
 | **Vendors** | APSV, APSS | 63 + 47 | Vendor master and ship-from records — banking, 1099, freight, terms |
@@ -62,10 +63,10 @@ Access is controlled by AD security groups. Users get the highest role from all 
 
 | AD Group | Role | Modules | Fields Visible |
 |----------|------|---------|---------------|
-| Martin-Audit-Users | USERS | 10 (no Security) | Operational — dates, stages, addresses, quantities, names, reps, warehouses |
-| Martin-Audit-Finance | FINANCE | 10 (no Security) | + pricing, costs, margins, credit limits, discounts, rebates |
-| Martin-Audit-Sensitive | SENSITIVE | 10 (no Security) | + bank accounts, routing numbers, tax IDs, 1099 info |
-| Martin-Audit-Admin | ADMIN | All 11 | Everything unmasked, including Security module |
+| Martin-Audit-Users | USERS | 11 (no Security) | Operational — dates, stages, addresses, quantities, names, reps, warehouses |
+| Martin-Audit-Finance | FINANCE | 11 (no Security) | + pricing, costs, margins, credit limits, discounts, rebates |
+| Martin-Audit-Sensitive | SENSITIVE | 11 (no Security) | + bank accounts, routing numbers, tax IDs, 1099 info |
+| Martin-Audit-Admin | ADMIN | All 12 | Everything unmasked, including Security module |
 
 Masking is server-side — masked field values are replaced with `●●●●●●` before the response is sent. The real data never reaches the browser. There is nothing to unredact on the client side.
 
@@ -414,8 +415,10 @@ martin-audit-web/
 │   ├── components/
 │   │   ├── ChangesTable.js  # Sortable data table with expandable rows
 │   │   ├── ExpandedRow.js   # Expanded row detail view
-│   │   ├── FilterBar.js     # Search bar — record #, source, warehouse, dates
+│   │   ├── FilterBar.js     # Search bar — record #, source, warehouse, dates, operator
+│   │   ├── InfoTip.js       # Hover tooltip "i" icon for search field descriptions
 │   │   ├── MultiSelect.js   # Multi-select dropdown for column filters
+│   │   ├── OperatorSelect.js # Searchable operator dropdown with name lookup
 │   │   ├── PODetail.js      # PO detail drawer
 │   │   ├── ResultFilters.js # Column filter dropdowns (client-side)
 │   │   ├── Sidebar.js       # Navigation sidebar with module list and theme toggle
@@ -423,7 +426,7 @@ martin-audit-web/
 │   │   └── UI.js            # Shared primitives (Badge, GlowDot, StageBadge)
 │   ├── config/
 │   │   ├── ThemeContext.js  # React context for dark/light theme
-│   │   ├── modules.js       # Module definitions (11 modules)
+│   │   ├── modules.js       # Module definitions (12 modules)
 │   │   └── theme.js         # Design tokens — colors, fonts, radii, shadows
 │   ├── hooks/
 │   │   └── useChangeSearch.js # Shared hook — search, filter, sort, CSV export
@@ -436,6 +439,7 @@ martin-audit-web/
 │   │   ├── PricingCustPage.js # PDSC customer pricing changes
 │   │   ├── PricingVendPage.js # PDSV vendor pricing changes
 │   │   ├── ProdWhsePage.js  # ICSP + ICSW product/warehouse changes
+│   │   ├── ProdLinePage.js  # ICSL product line setup changes
 │   │   ├── PurchasesPage.js # POEH + POEL purchase order changes
 │   │   ├── SecurityPage.js  # SASOO + PV_USER + PV_SECURE + AUTHSECURE (Admin only)
 │   │   ├── TransfersPage.js # WTEH + WTEL warehouse transfer changes
@@ -454,7 +458,7 @@ martin-audit-web/
 │   ├── compass.js           # Compass Data Lake client — submit, poll, fetch
 │   ├── lookups.js           # Name enrichment — caches vendor/customer/operator names
 │   ├── roles.js             # RBAC — role definitions, field masking rules, table filtering
-│   ├── tracked-fields.js    # Field registry — 22 tables, 893 tracked fields
+│   ├── tracked-fields.js    # Field registry — 23 tables, 956 tracked fields
 │   ├── logs/                # Audit logs (gitignored, auto-created)
 │   ├── package.json         # Backend dependencies
 │   └── .env.example         # Backend environment template
@@ -492,7 +496,7 @@ martin-audit-web/
 | Auth (Infor) | OAuth2 service account (grant_type=password) | Compass and SXe API access |
 | Auth (Users) | IIS Windows Authentication + AD LDAP | Kerberos/NTLM SSO with role-based access |
 | Access Control | RBAC with 4 tiers | Field-level masking by AD group membership |
-| Data | Compass Data Lake (allvariations) | Historical record versions across 22 tables |
+| Data | Compass Data Lake (allvariations) | Historical record versions across 23 tables |
 | Enrichment | Cached ARSC, APSV, SASOO lookups | Vendor/customer/operator display names |
 | CI/CD | GitHub Actions + self-hosted runner | Auto-deploy on merge to main |
 

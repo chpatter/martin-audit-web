@@ -27,6 +27,7 @@ export default function useChangeSearch({
   const [sortDir, setSortDir] = useState('desc');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [queryInfo, setQueryInfo] = useState(null);
   const [expandedRow, setExpandedRow] = useState(null);
   const [resultFilter, setResultFilter] = useState('');
@@ -36,6 +37,7 @@ export default function useChangeSearch({
   async function handleSearch() {
     setLoading(true);
     setError(null);
+    setHasSearched(true);
     setExpandedRow(null);
     setResultFilter('');
     setColumnFilters({});
@@ -113,6 +115,7 @@ export default function useChangeSearch({
     setExpandedRow(null);
     setResultFilter('');
     setColumnFilters({});
+    setHasSearched(false);
   }
 
   async function handleCancel() {
@@ -226,7 +229,7 @@ export default function useChangeSearch({
     changes,
     filters, setFilters,
     sortCol, sortDir,
-    loading, error,
+    loading, error, hasSearched,
     queryInfo,
     expandedRow, setExpandedRow,
     resultFilter, setResultFilter,

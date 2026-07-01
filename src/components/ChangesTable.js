@@ -77,6 +77,7 @@ function CellValue({ row, colKey, theme }) {
 export default function ChangesTable({
   data, columns, sortCol, sortDir, onSort,
   expandedRow, onToggleExpand,
+  loading = false, hasSearched = false,
 }) {
   const { theme } = useTheme();
 
@@ -134,7 +135,24 @@ export default function ChangesTable({
       </table>
       {data.length === 0 && (
         <div style={{ padding: 60, textAlign: 'center', color: theme.colors.textMuted }}>
-          No changes found. Enter a record number or date range and click Search.
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+              <div style={{
+                width: 36, height: 36, border: `3px solid ${theme.colors.border}`,
+                borderTopColor: theme.colors.accent, borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }} />
+              <span>Querying Data Lake...</span>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          ) : hasSearched ? (
+            <div>
+              <div style={{ fontSize: 14, marginBottom: 8 }}>No changes found</div>
+              <div style={{ fontSize: 12 }}>Try broadening your search — adjust the date range, remove filters, or check the record number.</div>
+            </div>
+          ) : (
+            <div>Enter search criteria above and click Search.</div>
+          )}
         </div>
       )}
     </div>

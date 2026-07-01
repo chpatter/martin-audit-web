@@ -15,6 +15,22 @@
 
 const PATCH_NOTES = [
   {
+    version: '1.0.3',
+    date: '2026-06-20',
+    title: 'Operator Search, Info Tooltips & Loading States',
+    changes: [
+      { type: 'added', text: 'Operator ID search — searchable dropdown on all modules. Type a name or code to find who made changes.' },
+      { type: 'added', text: 'Operator dropdown on Security page record field — search for operators by name or code' },
+      { type: 'added', text: 'Info tooltips — hover over the "i" icon next to any search field for a description of what it does' },
+      { type: 'added', text: 'Loading spinner — spinning indicator replaces the empty table while the Data Lake is being queried' },
+      { type: 'added', text: 'Related Order # (orderaltno) added to Purchases — shows tied OE order numbers on POs' },
+      { type: 'changed', text: 'Empty table now shows distinct states: prompt before searching, spinner during search, and helpful message when no results are found' },
+      { type: 'changed', text: 'Operator dropdown filters out deactivated accounts (names prefixed with X)' },
+      { type: 'changed', text: 'Operator ID and Security operator fields are now case-insensitive (auto-uppercased)' },
+      { type: 'changed', text: 'Timestamps now display in the user\'s local timezone (converted from server Central Time)' },
+    ],
+  },
+  {
     version: '1.0.2',
     date: '2026-06-17',
     title: 'Product Line Module, Name Enrichment & Lead Times',

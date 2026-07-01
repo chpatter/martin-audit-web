@@ -1,6 +1,6 @@
 {
   "name": "martin-audit-web",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "Martin Supply Audit System — CloudSuite Distribution audit log viewer",
   "author": "Martin Supply",
