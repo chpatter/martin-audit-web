@@ -19,6 +19,7 @@ export default function FilterBar({
   showProduct = false,
   showVendor = false,
   showOperator = false,
+  recordAsOperator = false,
 }) {
   const { theme } = useTheme();
   const inputStyle = {
@@ -38,13 +39,21 @@ export default function FilterBar({
 
         <div style={{ display: 'flex', flexDirection: 'column', width: 200 }}>
           <div style={labelStyle}>{recordLabel} <InfoTip text={recordTooltip} /></div>
-          <input
-            placeholder={`e.g. ${recordPlaceholder}`}
-            value={filters.pono || ''}
-            onChange={e => setFilters(f => ({ ...f, pono: e.target.value }))}
-            onKeyDown={e => e.key === 'Enter' && onSearch()}
-            style={{ ...inputStyle, fontFamily: theme.fonts.mono }}
-          />
+          {recordAsOperator ? (
+            <OperatorSelect
+              value={filters.pono || ''}
+              onChange={val => setFilters(f => ({ ...f, pono: val }))}
+              onSearch={onSearch}
+            />
+          ) : (
+            <input
+              placeholder={`e.g. ${recordPlaceholder}`}
+              value={filters.pono || ''}
+              onChange={e => setFilters(f => ({ ...f, pono: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && onSearch()}
+              style={{ ...inputStyle, fontFamily: theme.fonts.mono }}
+            />
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>

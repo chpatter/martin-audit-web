@@ -217,7 +217,8 @@ async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whs
   // Record number — quote string keys (prod), leave number keys (pono, orderno) unquoted
   if (pono) {
     if (cfg.recordKeyType === 'string') {
-      sql += ` AND ${cfg.recordKey} = '${sanitize(pono)}'`;
+      const val = cfg.recordKey === 'oper2' ? sanitize(pono).toUpperCase() : sanitize(pono);
+      sql += ` AND ${cfg.recordKey} = '${val}'`;
     } else {
       const num = sanitizeNum(pono);
       if (num !== null) sql += ` AND ${cfg.recordKey} = ${num}`;
@@ -233,7 +234,7 @@ async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whs
   if (safeTo) sql += ` AND transdt <= '${safeTo}'`;
   if (whse) sql += ` AND whse = '${sanitize(whse)}'`;
   if (whses && whses.length > 0) sql += ` AND whse IN (${whses.map(w => `'${sanitize(w)}'`).join(', ')})`;
-  if (operinit) sql += ` AND operinit = '${sanitize(operinit)}'`;
+  if (operinit) sql += ` AND operinit = '${sanitize(operinit).toUpperCase()}'`;
 
   // Only apply column filters to tables that have them
   const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv', 'icsl'];
