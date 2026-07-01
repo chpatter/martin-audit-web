@@ -91,6 +91,7 @@ export default function PurchasesPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="PO #" recordPlaceholder="5167702, 5184325-2" sourceOptions={SOURCE_OPTIONS}
+        recordTooltip="Search by purchase order number. Add a suffix with a dash (e.g. 5184325-2) to search a specific suffix."
         showWarehouse showOperator
       />
 

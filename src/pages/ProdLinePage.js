@@ -88,6 +88,7 @@ export default function ProdLinePage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Product Line" recordPlaceholder="e.g. ACO998, BRA200" sourceOptions={SOURCE_OPTIONS}
+        recordTooltip="Search by product line code. This is the product line setup, not individual products."
         showWarehouse showVendor showOperator
       />
 

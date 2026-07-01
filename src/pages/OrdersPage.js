@@ -91,6 +91,7 @@ export default function OrdersPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Order #" recordPlaceholder="10289159, 10289173" sourceOptions={SOURCE_OPTIONS}
+        recordTooltip="Search by sales order number. Add a suffix with a dash (e.g. 10289159-1) to search a specific suffix."
         showWarehouse showCustomer showOperator
       />
 

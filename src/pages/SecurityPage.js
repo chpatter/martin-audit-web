@@ -93,6 +93,7 @@ export default function SecurityPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Operator" recordPlaceholder="JK01, CB01" sourceOptions={SOURCE_OPTIONS}
+        recordTooltip="Search by the operator whose security settings you want to view. This is different from the Operator ID filter, which searches by who made the change."
       />
 
       {error && (

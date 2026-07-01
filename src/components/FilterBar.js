@@ -1,16 +1,18 @@
 import React from 'react';
 import { useTheme } from '../config/ThemeContext';
 import OperatorSelect from './OperatorSelect';
+import InfoTip from './InfoTip';
 
 /**
  * Filter bar for audit change pages.
  * Always shows: Record#, Source, Dates, Limit, Include New.
- * Conditionally shows: Warehouse, Customer#, Product# — controlled by props.
+ * Conditionally shows: Warehouse, Customer#, Product#, Vendor#, Operator — controlled by props.
  */
 export default function FilterBar({
   filters, setFilters, loading, onSearch, onExport, onClear, onCancel, hasData,
   recordLabel = 'PO #',
   recordPlaceholder = '5167702, 5184325-2',
+  recordTooltip = 'The primary record identifier to search for',
   sourceOptions = [],
   showWarehouse = false,
   showCustomer = false,
@@ -35,7 +37,7 @@ export default function FilterBar({
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
 
         <div style={{ display: 'flex', flexDirection: 'column', width: 200 }}>
-          <div style={labelStyle}>{recordLabel}</div>
+          <div style={labelStyle}>{recordLabel} <InfoTip text={recordTooltip} /></div>
           <input
             placeholder={`e.g. ${recordPlaceholder}`}
             value={filters.pono || ''}
@@ -46,7 +48,7 @@ export default function FilterBar({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
-          <div style={labelStyle}>Source</div>
+          <div style={labelStyle}>Source <InfoTip text="Filter results to a specific data source table. Leave on 'All Sources' to search all tables in this module." /></div>
           <select value={filters.source || ''} onChange={e => setFilters(f => ({ ...f, source: e.target.value }))}
             style={inputStyle}>
             <option value="">All Sources</option>
@@ -58,7 +60,7 @@ export default function FilterBar({
 
         {showWarehouse && (
           <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
-            <div style={labelStyle}>Warehouse</div>
+            <div style={labelStyle}>Warehouse <InfoTip text="Filter by warehouse number (e.g. 1000, 1300, 3300)" /></div>
             <input placeholder="e.g. 1000, 3300" value={filters.whse || ''}
               onChange={e => setFilters(f => ({ ...f, whse: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && onSearch()}
@@ -68,7 +70,7 @@ export default function FilterBar({
 
         {showCustomer && (
           <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
-            <div style={labelStyle}>Customer #</div>
+            <div style={labelStyle}>Customer # <InfoTip text="Filter by customer number" /></div>
             <input placeholder="e.g. 308337" value={filters.custno || ''}
               onChange={e => setFilters(f => ({ ...f, custno: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && onSearch()}
@@ -78,7 +80,7 @@ export default function FilterBar({
 
         {showProduct && (
           <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
-            <div style={labelStyle}>Product #</div>
+            <div style={labelStyle}>Product # <InfoTip text="Filter by product number" /></div>
             <input placeholder="e.g. 1044240" value={filters.prod || ''}
               onChange={e => setFilters(f => ({ ...f, prod: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && onSearch()}
@@ -88,7 +90,7 @@ export default function FilterBar({
 
         {showVendor && (
           <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
-            <div style={labelStyle}>Vendor #</div>
+            <div style={labelStyle}>Vendor # <InfoTip text="Filter by vendor number" /></div>
             <input placeholder="e.g. 516998" value={filters.vendno || ''}
               onChange={e => setFilters(f => ({ ...f, vendno: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && onSearch()}
@@ -98,7 +100,7 @@ export default function FilterBar({
 
         {showOperator && (
           <div style={{ display: 'flex', flexDirection: 'column', width: 150 }}>
-            <div style={labelStyle}>Operator ID</div>
+            <div style={labelStyle}>Operator ID <InfoTip text="Filter by the operator who made the change. This shows who changed the record, not the record being changed." /></div>
             <OperatorSelect
               value={filters.operinit || ''}
               onChange={val => setFilters(f => ({ ...f, operinit: val }))}
@@ -108,7 +110,7 @@ export default function FilterBar({
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', width: 130 }}>
-          <div style={labelStyle}>Start Date</div>
+          <div style={labelStyle}>Start Date <InfoTip text="Show changes on or after this date. Defaults to 7 days ago." /></div>
           <input type="date" value={filters.fromDate || ''}
             onChange={e => setFilters(f => ({ ...f, fromDate: e.target.value }))}
             onKeyDown={e => e.key === 'Enter' && onSearch()}
@@ -116,7 +118,7 @@ export default function FilterBar({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', width: 130 }}>
-          <div style={labelStyle}>End Date</div>
+          <div style={labelStyle}>End Date <InfoTip text="Show changes on or before this date. Leave blank to include up to today." /></div>
           <input type="date" value={filters.toDate || ''}
             onChange={e => setFilters(f => ({ ...f, toDate: e.target.value }))}
             onKeyDown={e => e.key === 'Enter' && onSearch()}
@@ -124,7 +126,7 @@ export default function FilterBar({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', width: 60 }}>
-          <div style={labelStyle}>Limit</div>
+          <div style={labelStyle}>Limit <InfoTip text="Maximum number of records to return per table. Lower values return faster." /></div>
           <input placeholder="500" value={filters.limit || ''}
             onChange={e => setFilters(f => ({ ...f, limit: e.target.value.replace(/[^0-9]/g, '') }))}
             onKeyDown={e => e.key === 'Enter' && onSearch()}
@@ -134,7 +136,7 @@ export default function FilterBar({
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: theme.colors.textMuted, fontSize: 12, cursor: 'pointer', paddingBottom: 10 }}>
           <input type="checkbox" checked={filters.includeNew !== false}
             onChange={e => setFilters(f => ({ ...f, includeNew: e.target.checked }))} />
-          Include New
+          Include New <InfoTip text="When checked, results include the initial creation of records (shown as 'New'). Uncheck to see only changes to existing records." />
         </label>
 
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'flex-end', paddingBottom: 0 }}>
