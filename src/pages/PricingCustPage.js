@@ -116,7 +116,7 @@ export default function PricingCustPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Price Record #" recordPlaceholder="318506, 321516" sourceOptions={SOURCE_OPTIONS}
-        showWarehouse showCustomer showProduct
+        showWarehouse showCustomer showProduct showOperator
       />
 
       {error && (

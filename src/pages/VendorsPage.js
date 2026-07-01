@@ -88,6 +88,7 @@ export default function VendorsPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Vendor #" recordPlaceholder="505005, 500863" sourceOptions={SOURCE_OPTIONS}
+        showOperator
       />
 
       {error && (

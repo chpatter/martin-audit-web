@@ -89,6 +89,7 @@ export default function TransfersPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Transfer #" recordPlaceholder="30905, 30904" sourceOptions={SOURCE_OPTIONS}
+        showOperator
       />
 
       {error && (

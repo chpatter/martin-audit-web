@@ -22,7 +22,7 @@ export default function useChangeSearch({
 } = {}) {
   const defaultFromDate = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
   const [changes, setChanges] = useState([]);
-  const [filters, setFilters] = useState({ fromDate: defaultFromDate, toDate: '', pono: '', whse: '', source: '', custno: '', vendno: '', prod: '', limit: '', includeNew: true });
+  const [filters, setFilters] = useState({ fromDate: defaultFromDate, toDate: '', pono: '', whse: '', source: '', custno: '', vendno: '', operinit: '', prod: '', limit: '', includeNew: true });
   const [sortCol, setSortCol] = useState('transdt');
   const [sortDir, setSortDir] = useState('desc');
   const [loading, setLoading] = useState(false);
@@ -83,6 +83,7 @@ export default function useChangeSearch({
       if (!filters.source) searchFilters.tables = defaultTables;
       if (filters.custno) searchFilters.custno = filters.custno.trim();
       if (filters.vendno) searchFilters.vendno = filters.vendno.trim();
+      if (filters.operinit) searchFilters.operinit = filters.operinit.trim();
       if (filters.prod) searchFilters.prod = filters.prod.trim();
       if (filters.limit) searchFilters.limit = parseInt(filters.limit, 10);
       searchFilters.includeNew = filters.includeNew;
@@ -105,7 +106,7 @@ export default function useChangeSearch({
   }
 
   function handleClear() {
-    setFilters({ fromDate: '', toDate: '', pono: '', whse: '', source: '', custno: '', vendno: '', prod: '', limit: '', includeNew: true });
+    setFilters({ fromDate: '', toDate: '', pono: '', whse: '', source: '', custno: '', vendno: '', operinit: '', prod: '', limit: '', includeNew: true });
     setChanges([]);
     setError(null);
     setQueryInfo(null);

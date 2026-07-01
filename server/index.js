@@ -209,7 +209,7 @@ async function ensureAuthenticated() {
 
 // ─── Helper: Run allvariations query for a table with filters ───
 
-async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod } = {}) {
+async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit } = {}) {
   const cfg = getTableConfig(table);
   const t = table.toLowerCase();
   let sql = `SELECT * FROM infor.allvariations('${sanitize(table)}') WHERE 1=1`;
@@ -233,6 +233,7 @@ async function queryVariations(table, { pono, posuf, fromDate, toDate, whse, whs
   if (safeTo) sql += ` AND transdt <= '${safeTo}'`;
   if (whse) sql += ` AND whse = '${sanitize(whse)}'`;
   if (whses && whses.length > 0) sql += ` AND whse IN (${whses.map(w => `'${sanitize(w)}'`).join(', ')})`;
+  if (operinit) sql += ` AND operinit = '${sanitize(operinit)}'`;
 
   // Only apply column filters to tables that have them
   const TABLES_WITH_VENDNO = ['poeh', 'poel', 'apsv', 'apss', 'pdsc', 'pdsv', 'icsl'];
@@ -428,7 +429,7 @@ app.post('/api/changes/search', async (req, res) => {
     const authed = await ensureAuthenticated();
     if (!authed) return res.status(503).json({ message: 'Not connected to Infor' });
 
-    const { fromDate, toDate, pono, posuf, ponos, whse, whses, vendno, custno, prod, limit, source, tables: requestedTables, includeNew = true } = req.body;
+    const { fromDate, toDate, pono, posuf, ponos, whse, whses, vendno, custno, prod, operinit, limit, source, tables: requestedTables, includeNew = true } = req.body;
     console.log(`[CHANGES] Search: pono=${pono || 'any'} ponos=${ponos ? ponos.length + ' records' : 'none'} custno=${custno || 'any'} prod=${prod || 'any'} limit=${limit || 'none'} source=${source || 'all'} from=${fromDate || 'any'} to=${toDate || 'any'}`);
 
     // Reset cancel flag for new search
@@ -444,7 +445,7 @@ app.post('/api/changes/search', async (req, res) => {
       // Multiple records — run a separate query per record to avoid slow IN clauses on allvariations
       for (const entry of ponos) {
         if (compass.cancelled) break;
-        const filters = { pono: entry.pono, posuf: entry.posuf, fromDate, toDate, whse, whses, vendno, custno, prod };
+        const filters = { pono: entry.pono, posuf: entry.posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit };
         for (const table of tables) {
           if (compass.cancelled) break;
           const rows = await queryVariations(table, filters);
@@ -453,7 +454,7 @@ app.post('/api/changes/search', async (req, res) => {
       }
     } else {
       // Single record or date range search
-      const filters = { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod };
+      const filters = { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit };
       for (const table of tables) {
         if (compass.cancelled) break;
         const rows = await queryVariations(table, filters);

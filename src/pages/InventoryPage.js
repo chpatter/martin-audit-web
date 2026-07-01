@@ -90,7 +90,7 @@ export default function InventoryPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Product #" recordPlaceholder="1467790, 1066938" sourceOptions={SOURCE_OPTIONS}
-        showWarehouse
+        showWarehouse showOperator
       />
 
       {error && (

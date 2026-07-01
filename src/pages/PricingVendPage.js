@@ -91,7 +91,7 @@ export default function PricingVendPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Vendor #" recordPlaceholder="500370, 505005" sourceOptions={SOURCE_OPTIONS}
-        showProduct
+        showProduct showOperator
       />
 
       {error && (

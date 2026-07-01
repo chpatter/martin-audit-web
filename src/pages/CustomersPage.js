@@ -89,6 +89,7 @@ export default function CustomersPage() {
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Customer #" recordPlaceholder="304553, 306160" sourceOptions={SOURCE_OPTIONS}
+        showOperator
       />
 
       {error && (
