@@ -179,7 +179,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
                 textAlign: 'center', letterSpacing: '0.1em',
               }}
             >
-              {connectionInfo?.operator || 'CONNECTED'} · v1.0.2
+              {connectionInfo?.operator || 'CONNECTED'} · v1.0.3
             </div>
           </>
         )}
