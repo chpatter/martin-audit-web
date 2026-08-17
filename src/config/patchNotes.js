@@ -17,7 +17,7 @@ const PATCH_NOTES = [
   {
     version: '1.0.4',
     date: '2026-08-14',
-    title: 'ICSW Field Expansion & Deep Link Support',
+    title: 'Field Expansion & Deep Link Support',
     changes: [
       { type: 'added', text: 'ICSW fields: Count Required, Critical Product, Last Count Date, Shelf Life Product' },
       { type: 'added', text: 'Deep link support — app can be opened with URL parameters to auto-navigate and search (e.g. ?module=orders&record=10345984)' },
