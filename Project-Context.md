@@ -8,7 +8,7 @@ Paste this at the start of a new AI chat to continue working on the project. Thi
 
 Internal web app for Martin Supply replacing Agile Dragon's Dragon Pack Audit. Tracks field-level changes across Infor CloudSuite SXe by querying Compass Data Lake's `allvariations()` function, comparing consecutive record versions to detect what changed, when, and by whom.
 
-**Current Version:** 1.0.3
+**Current Version:** 1.0.4
 **Production URL:** https://audit.martinsupply.com
 
 ## Repos & Branches
@@ -190,7 +190,7 @@ AD security groups (must be on-prem ADUC — cloud-only Entra groups don't work 
 
 ---
 
-## Modules (12 total, 23 tables, ~956 tracked fields)
+## Modules (12 total, 23 tables, ~960 tracked fields)
 
 | Module | Page File | Tables | Fields | Search Fields |
 |--------|-----------|--------|--------|--------------|
@@ -200,7 +200,7 @@ AD security groups (must be on-prem ADUC — cloud-only Entra groups don't work 
 | Orders | OrdersPage.js | OEEH, OEEL | 66+56 | Order#, Source, Warehouse, Customer#, Operator, Dates, Limit |
 | Pricing-Customer | PricingCustPage.js | PDSC | 77 | Record#, Source, Warehouse, Customer#, Product#, Operator, Dates, Limit |
 | Pricing-Vendor | PricingVendPage.js | PDSV | 44 | Vendor#, Source, Product#, Operator, Dates, Limit |
-| Prod/Whse | ProdWhsePage.js | ICSP, ICSW | 16+28 | Product#, Source, Warehouse, Operator, Dates, Limit |
+| Prod/Whse | ProdWhsePage.js | ICSP, ICSW | 16+32 | Product#, Source, Warehouse, Operator, Dates, Limit |
 | Prod Line | ProdLinePage.js | ICSL | 56 | ProdLine, Source, Warehouse, Vendor#, Operator, Dates, Limit |
 | Purchases | PurchasesPage.js | POEH, POEL | 34+23 | PO#, Source, Warehouse, Operator, Dates, Limit |
 | Security | SecurityPage.js | SASOO, PV_USER, PV_SECURE, AUTHSECURE | 90+46+3+10 | Operator(dropdown), Source, Operator ID, Dates, Limit |
@@ -212,6 +212,7 @@ AD security groups (must be on-prem ADUC — cloud-only Entra groups don't work 
 ## Frontend Architecture
 
 ### Shared Hook Pattern (src/hooks/useChangeSearch.js)
+| `hooks/useDeepLink.js` | Deep link and CSD context listener — auto-navigates from URL params or Infor screen context |
 
 ALL 12 module pages use the same hook. Each page passes different config:
 
@@ -354,6 +355,7 @@ If it's a banking/tax field, also add to `SENSITIVE_FIELDS` in `roles.js`.
 1. Add `show*` prop to `FilterBar.js` (default false) with input element, `onKeyDown`, and `InfoTip`
 2. Add to `hasFilters` check in FilterBar
 3. Add to `useChangeSearch.js` — filter state initial value, search handler (`if (filters.x) searchFilters.x = ...`), clear handler
+| `hooks/useDeepLink.js` | Deep link and CSD context listener — auto-navigates from URL params or Infor screen context |
 4. Add to `queryVariations` in `server/index.js` — add WHERE clause, possibly a `TABLES_WITH_*` array
 5. Add to route handler destructuring and filters object in `server/index.js`
 6. Pass `show*` on the page(s) that need it
@@ -422,6 +424,7 @@ If it's a banking/tax field, also add to `SENSITIVE_FIELDS` in `roles.js`.
 | `config/ThemeContext.js` | Dark/light theme React context |
 | `config/theme.js` | Design tokens — colors, fonts, radii, shadows |
 | `hooks/useChangeSearch.js` | Shared search hook — all 12 pages consume this |
+| `hooks/useDeepLink.js` | Deep link and CSD context listener — auto-navigates from URL params or Infor screen context |
 | `services/api.js` | API client — relative `/api` paths, `credentials: 'include'` |
 | `utils/format.js` | Date/time formatting helpers |
 

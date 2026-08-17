@@ -15,6 +15,17 @@
 
 const PATCH_NOTES = [
   {
+    version: '1.0.4',
+    date: '2026-08-14',
+    title: 'ICSW Field Expansion & Deep Link Support',
+    changes: [
+      { type: 'added', text: 'ICSW fields: Count Required, Critical Product, Last Count Date, Shelf Life Product' },
+      { type: 'added', text: 'Deep link support — app can be opened with URL parameters to auto-navigate and search (e.g. ?module=orders&record=10345984)' },
+      { type: 'added', text: 'CSD context listener — foundation for future widget integration with Infor screens' },
+      { type: 'changed', text: 'ICSW Status description updated: (D)irect Ship, (O)rder as Needed, (S)tock, (X)-Do not Reorder' },
+    ],
+  },
+  {
     version: '1.0.3',
     date: '2026-06-20',
     title: 'Operator Search, Info Tooltips & Loading States',
