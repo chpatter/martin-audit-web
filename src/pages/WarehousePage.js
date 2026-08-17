@@ -86,7 +86,7 @@ export default function WarehousePage({ initialRecord = '', initialRecordField =
       <FilterBar
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
-        recordLabel="Product #" recordPlaceholder="e.g. 1138256, 3400123" sourceOptions={SOURCE_OPTIONS}
+        recordLabel="Product #" recordPlaceholder="1138256, 3400123" sourceOptions={SOURCE_OPTIONS}
         recordTooltip="Search by product number. Shows changes to warehouse-level settings like bin locations, costs, lead times, and status."
         showWarehouse showOperator
       />
