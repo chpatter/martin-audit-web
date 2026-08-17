@@ -44,7 +44,8 @@ Browser → IIS (Windows Auth) → iisnode → Node.js/Express → Compass Data 
 7. Queries Compass Data Lake using `SELECT * FROM infor.allvariations('tablename') WHERE ...`
 8. Compass returns every historical version of matching records
 9. `changes.js` compares consecutive versions to detect field-level changes
-10. `lookups.js` enriches results with vendor/customer/operator/sales rep names
+10. `lookups.js` enriches results with vendor/customer/operator/sales rep/buyer names
+11. `value-translations.js` translates coded values (stage codes, status types, etc.) to human-readable labels
 11. `roles.js` masks sensitive fields based on user's role tier
 12. Response sent to browser
 
@@ -410,7 +411,8 @@ If it's a banking/tax field, also add to `SENSITIVE_FIELDS` in `roles.js`.
 | `auth-ad.js` | AD middleware — reads iisnode auth header, LDAP group checks, 15-min cache |
 | `changes.js` | Change detection — compares consecutive record versions, sets hasSuffix |
 | `compass.js` | Compass Data Lake client — submit, poll, fetch (3-step async) |
-| `lookups.js` | Name caches — vendors, customers, operators, sales reps. Enrichment functions. |
+| `lookups.js` | Name caches — vendors, customers, operators, sales reps, buyers. Enrichment + value translations. |
+| `value-translations.js` | Maps coded field values to labels (stage codes, status types, etc.). 60+ field mappings. |
 | `audit-log.js` | Daily JSON audit logs at server/logs/ |
 | `.env` | Secrets (INFOR_*, AD_*) — never committed |
 

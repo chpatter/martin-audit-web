@@ -23,6 +23,8 @@ const PATCH_NOTES = [
       { type: 'added', text: 'Deep link support — app can be opened with URL parameters to auto-navigate and search (e.g. ?module=orders&record=10345984)' },
       { type: 'added', text: 'CSD context listener — foundation for future widget integration with Infor screens' },
       { type: 'changed', text: 'ICSW Status description updated: (D)irect Ship, (O)rder as Needed, (S)tock, (X)-Do not Reorder' },
+      { type: 'added', text: 'Value translations — coded fields now show human-readable labels (e.g. stage code "1" displays as "1 (Ordered)", status "a" displays as "a (Active)")' },
+      { type: 'added', text: '60+ field mappings across all modules: stage codes, status types, approval types, transaction types, product types, pricing types, and more' },
     ],
   },
   {

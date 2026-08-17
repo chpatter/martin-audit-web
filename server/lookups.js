@@ -11,6 +11,7 @@
  */
 
 const fetch = require('node-fetch');
+const { translateValue, TRANSLATABLE_FIELDS } = require('./value-translations');
 
 const CACHE_TTL = 3600000; // 1 hour
 
@@ -257,6 +258,14 @@ function enrichChanges(changes, vendors, customers, operators, salesReps, buyers
       };
       enriched.new_value = enrichBuyer(change.new_value);
       enriched.old_value = enrichBuyer(change.old_value);
+    }
+
+    // Translate coded values (stage codes, status types, etc.)
+    if (!SALES_REP_FIELDS.includes(change.field_name) && !BUYER_FIELDS.includes(change.field_name)) {
+      if (TRANSLATABLE_FIELDS.has(change.field_name)) {
+        enriched.new_value = translateValue(change.source, change.field_name, enriched.new_value);
+        enriched.old_value = translateValue(change.source, change.field_name, enriched.old_value);
+      }
     }
 
     return enriched;
