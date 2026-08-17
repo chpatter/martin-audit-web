@@ -203,7 +203,7 @@ AD security groups (must be on-prem ADUC — cloud-only Entra groups don't work 
 | Pricing-Vendor | PricingVendPage.js | PDSV | 44 | Vendor#, Source, Product#, Operator, Dates, Limit |
 | Products | ProductsPage.js | ICSP | 16 | Product#, Source, Operator, Dates, Limit |
 | Warehouse | WarehousePage.js | ICSW | 32 | Product#, Source, Warehouse, Operator, Dates, Limit |
-| Prod Line | ProdLinePage.js | ICSL | 56 | ProdLine, Source, Warehouse, Vendor#, Operator, Dates, Limit |
+| Product Line | ProdLinePage.js | ICSL | 56 | ProdLine, Source, Warehouse, Vendor#, Operator, Dates, Limit |
 | Purchases | PurchasesPage.js | POEH, POEL | 34+23 | PO#, Source, Warehouse, Operator, Dates, Limit |
 | Security | SecurityPage.js | SASOO, PV_USER, PV_SECURE, AUTHSECURE | 90+46+3+10 | Operator(dropdown), Source, Operator ID, Dates, Limit |
 | Transfers | TransfersPage.js | WTEH, WTEL | 24+46 | Transfer#, Source, Operator, Dates, Limit |
@@ -372,7 +372,7 @@ If it's a banking/tax field, also add to `SENSITIVE_FIELDS` in `roles.js`.
 | iisnode over ARR reverse proxy | IIS runs URL Rewrite BEFORE auth, so `{LOGON_USER}` was empty with ARR |
 | Server-side field masking | Real values replaced with `●●●●●●` before response. Browser never sees masked data |
 | Additive role tiers | Each tier includes everything below it. FINANCE sees everything USERS sees + more |
-| ICSL on its own page | Different search keys (prodline vs prod), different users than Prod/Whse |
+| ICSL on its own page | Different search keys (prodline vs prod), different users than Products/Warehouse |
 | Inline enrichment for reps/buyers | Values enriched in new_value/old_value, not new columns — cleaner for these field types |
 | 7-day default start date visible in UI | No hidden defaults. User can see and change the date filter |
 | `dev`/`main` branch strategy | Auto-deploy on merge to main. Dev is safe to push without affecting production |

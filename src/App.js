@@ -191,7 +191,7 @@ export default function App() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: theme.colors.textBright }}>
-              {activeModule === 'dashboard' ? '📊 Dashboard' : `${currentModule?.icon} ${currentModule?.label}`}
+              {activeModule === 'dashboard' ? '🏠 Dashboard' : `${currentModule?.icon} ${currentModule?.label}`}
             </h2>
             {currentModule?.badge && <Badge variant="warning">{currentModule.badge}</Badge>}
           </div>

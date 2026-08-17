@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../config/ThemeContext';
 import MODULES from '../config/modules';
+import InfoTip from './InfoTip';
 
 export default function Sidebar({ activeModule, onModuleChange, collapsed, onToggle, connectionInfo, userRole }) {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -98,7 +99,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
           fontFamily: theme.fonts.body,
         }}
       >
-        <span style={{ fontSize: 16, flexShrink: 0 }}>📊</span>
+        <span style={{ fontSize: 16, flexShrink: 0 }}>🏠</span>
         {!collapsed && <span>Dashboard</span>}
       </button>
 
@@ -108,7 +109,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
           <button
             key={m.id}
             onClick={() => m.active && onModuleChange(m.id)}
-            title={collapsed ? m.label : m.description}
+            title={collapsed ? m.label : ''}
             style={{
               width: '100%',
               display: 'flex',
@@ -135,7 +136,12 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
             }}
           >
             <span style={{ fontSize: 16, flexShrink: 0 }}>{m.icon}</span>
-            {!collapsed && <span>{m.label}</span>}
+            {!collapsed && <span style={{ flex: 1 }}>{m.label}</span>}
+            {!collapsed && m.active && m.tooltip && (
+              <span style={{ marginLeft: 'auto', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                <InfoTip text={m.tooltip} position="right" />
+              </span>
+            )}
             {!collapsed && !m.active && (
               <span style={{ marginLeft: 'auto', fontSize: 9, color: sidebarColors.textMuted }}>
                 SOON
@@ -179,7 +185,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
                 textAlign: 'center', letterSpacing: '0.1em',
               }}
             >
-              {connectionInfo?.operator || 'CONNECTED'} · v1.0.4
+              {connectionInfo?.operator || 'CONNECTED'} · v1.0.3
             </div>
           </>
         )}
