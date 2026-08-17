@@ -26,6 +26,7 @@ const PATCH_NOTES = [
       { type: 'added', text: 'Value translations — coded fields now show human-readable labels (e.g. stage code "1" displays as "1 (Ordered)", status "a" displays as "a (Active)")' },
       { type: 'added', text: '60+ field mappings across all modules: stage codes, status types, approval types, transaction types, product types, pricing types, and more' },
       { type: 'changed', text: 'Prod/Whse module split into separate Products (ICSP) and Warehouse (ICSW) modules per user feedback' },
+      { type: 'fixed', text: 'Start date filter now always applies when set — previously it was silently ignored when searching by a specific record number' },
     ],
   },
   {

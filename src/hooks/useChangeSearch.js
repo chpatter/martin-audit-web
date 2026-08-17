@@ -109,13 +109,6 @@ useEffect(() => {
       if (filters.limit) searchFilters.limit = parseInt(filters.limit, 10);
       searchFilters.includeNew = filters.includeNew;
 
-      // If searching by a specific record and the date is still the default,
-      // drop the date filter so users get the full history for that record
-      const hasSpecificRecord = searchFilters.pono || searchFilters.ponos || searchFilters.custno || searchFilters.prod;
-      if (hasSpecificRecord && searchFilters.fromDate === defaultFromDate) {
-        delete searchFilters.fromDate;
-      }
-
       const result = await searchChanges(searchFilters);
       setChanges(result.changes || []);
       setQueryInfo({ count: result.count, timestamp: new Date().toLocaleTimeString() });
