@@ -7,16 +7,14 @@ import ResultFilters from '../components/ResultFilters';
 import ChangesTable from '../components/ChangesTable';
 import { formatDateTime } from '../utils/format';
 
-// ─── Prod/Whse module config ───
+// ─── Warehouse module config ───
 
 const SOURCE_TABLES = [
-  { key: 'ICSP', color: '#60a5fa' },
   { key: 'ICSW', color: '#fbbf24' },
 ];
 
 const SOURCE_OPTIONS = [
-  { value: 'icsp', label: 'ICSP (Product Master)' },
-  { value: 'icsw', label: 'ICSW (Product/Warehouse)' },
+  { value: 'icsw', label: 'ICSW (Warehouse Product Master)' },
 ];
 
 const FILTER_KEYS = ['source', 'record', 'lineno', 'whse', 'field', 'transproc', 'new_value', 'old_value', 'transdt', 'effectiveEnd', 'oper', 'description'];
@@ -26,10 +24,10 @@ const FILTER_LABELS = {
   record: 'Product',
   lineno: 'Warehouse',
   whse: 'whse',
-  field: 'Product /Warehouse Changes',
+  field: 'Warehouse Changes',
   transproc: 'Transaction Process',
-  new_value: 'Product New Value',
-  old_value: 'Product Original Value',
+  new_value: 'New Value',
+  old_value: 'Original Value',
   transdt: 'Effective Start DateTime',
   effectiveEnd: 'Effective End DateTime',
   oper: 'User and OperID',
@@ -38,13 +36,12 @@ const FILTER_LABELS = {
 
 const COLUMNS = [
   { key: 'source', label: 'Data Source', width: 70 },
-  { key: 'pono', label: 'Product', width: 110 },
+  { key: 'pono', label: 'Product', width: 120 },
   { key: 'lineno', label: 'Warehouse', width: 80 },
-  { key: 'whse', label: 'whse', width: 50 },
-  { key: 'field_label', label: 'Product /Warehouse Changes', width: 240 },
+  { key: 'field_label', label: 'Warehouse Changes', width: 260 },
   { key: 'transproc', label: 'Transaction Process', width: 150 },
-  { key: 'new_value', label: 'Product New Value', width: 190 },
-  { key: 'old_value', label: 'Product Original Value', width: 190 },
+  { key: 'new_value', label: 'New Value', width: 200 },
+  { key: 'old_value', label: 'Original Value', width: 200 },
   { key: 'transdt', label: 'Effective Start DateTime', width: 175 },
   { key: 'effectiveEnd', label: 'Effective End DateTime', width: 165 },
   { key: 'opername', label: 'User and OperID', width: 180 },
@@ -52,15 +49,15 @@ const COLUMNS = [
 ];
 
 const CSV_HEADERS = [
-  'Data Source', 'Product', 'Warehouse', 'whse',
-  'Product /Warehouse Changes', 'Transaction Process', 'Product New Value',
-  'Product Original Value', 'Effective Start DateTime', 'Effective End DateTime',
+  'Data Source', 'Product', 'Warehouse',
+  'Warehouse Changes', 'Transaction Process', 'New Value',
+  'Original Value', 'Effective Start DateTime', 'Effective End DateTime',
   'User and OperID', 'description',
 ];
 
 function csvRowMapper(row) {
   return [
-    row.source, row.pono, row.lineno || '', row.whse || '',
+    row.source, row.pono, row.lineno || '',
     `${row.field_label} - (${row.field_name})`, row.transproc || '', row.new_value || '', row.old_value || '',
     formatDateTime(row.transdt, row.transtm), row.effectiveEnd || '12/31/2046 12:00 AM',
     row.opername || row.oper || '', row.description || '',
@@ -69,7 +66,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function ProdWhsePage({ initialRecord = '', initialRecordField = 'pono' }) {
+export default function WarehousePage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -77,8 +74,8 @@ export default function ProdWhsePage({ initialRecord = '', initialRecordField = 
     columnFilters, columnFiltersOpen, setColumnFiltersOpen, handleColumnFilterChange,
     sortedChanges, handleSearch, handleClear, handleCancel, handleSort, handleExportCSV,
   } = useChangeSearch({
-    defaultTables: ['icsp', 'icsw'],
-    filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'product-warehouse-changes',
+    defaultTables: ['icsw'],
+    filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'warehouse-changes',
     initialRecord, initialRecordField,
   });
 
@@ -89,7 +86,8 @@ export default function ProdWhsePage({ initialRecord = '', initialRecordField = 
       <FilterBar
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
-        recordLabel="Product #" recordPlaceholder="1138256, 3400123" sourceOptions={SOURCE_OPTIONS}
+        recordLabel="Product #" recordPlaceholder="e.g. 1138256, 3400123" sourceOptions={SOURCE_OPTIONS}
+        recordTooltip="Search by product number. Shows changes to warehouse-level settings like bin locations, costs, lead times, and status."
         showWarehouse showOperator
       />
 
@@ -107,7 +105,7 @@ export default function ProdWhsePage({ initialRecord = '', initialRecordField = 
             {loading && ' — querying Data Lake...'}
           </span>
           {changes.length > 0 && (
-            <input placeholder="Filter results... (e.g. baseprice, listprice, statustype)" value={resultFilter}
+            <input placeholder="Filter results... (e.g. binloc1, statustype, leadtmavg)" value={resultFilter}
               onChange={e => setResultFilter(e.target.value)}
               style={{ padding: '6px 12px', background: theme.colors.bgInput, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.md, color: theme.colors.text, fontSize: 12, outline: 'none', width: 340, fontFamily: theme.fonts.mono }} />
           )}

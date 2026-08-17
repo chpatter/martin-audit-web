@@ -9,7 +9,8 @@ import useDeepLink from './hooks/useDeepLink';
 import LoginPage from './pages/LoginPage';
 import PurchasesPage from './pages/PurchasesPage';
 import OrdersPage from './pages/OrdersPage';
-import ProdWhsePage from './pages/ProdWhsePage';
+import ProductsPage from './pages/ProductsPage';
+import WarehousePage from './pages/WarehousePage';
 import ProdLinePage from './pages/ProdLinePage';
 import CustomersPage from './pages/CustomersPage';
 import InventoryPage from './pages/InventoryPage';
@@ -139,7 +140,8 @@ export default function App() {
   const PAGE_MAP = {
     purchases: PurchasesPage,
     orders: OrdersPage,
-    prod_whse: ProdWhsePage,
+    products: ProductsPage,
+    warehouse: WarehousePage,
     prod_line: ProdLinePage,
     customers: CustomersPage,
     inventory: InventoryPage,
@@ -155,7 +157,7 @@ export default function App() {
   const MODULE_RECORD_FIELD = {
     orders: 'pono', purchases: 'pono', transfers: 'pono',
     customers: 'custno', vendors: 'vendno',
-    prod_whse: 'prod', prod_line: 'prod', catalog: 'prod', inventory: 'prod',
+    products: 'prod', warehouse: 'prod', prod_line: 'prod', catalog: 'prod', inventory: 'prod',
     pricing_cust: 'custno', pricing_vend: 'vendno',
     security: 'operinit',
   };
