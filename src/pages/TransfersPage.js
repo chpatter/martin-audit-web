@@ -69,7 +69,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function TransfersPage() {
+export default function TransfersPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -79,6 +79,7 @@ export default function TransfersPage() {
   } = useChangeSearch({
     defaultTables: ['wteh', 'wtel'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'transfer-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

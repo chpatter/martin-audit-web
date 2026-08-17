@@ -70,7 +70,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function InventoryPage() {
+export default function InventoryPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -80,6 +80,7 @@ export default function InventoryPage() {
   } = useChangeSearch({
     defaultTables: ['icet', 'icsep', 'icset'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'inventory-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

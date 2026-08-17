@@ -65,7 +65,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function CatalogPage() {
+export default function CatalogPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -75,6 +75,7 @@ export default function CatalogPage() {
   } = useChangeSearch({
     defaultTables: ['icsc'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'catalog-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

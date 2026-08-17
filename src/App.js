@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTheme } from './config/ThemeContext';
 import MODULES from './config/modules';
 import { GlowDot, Badge } from './components/UI';
 import Sidebar from './components/Sidebar';
 import PatchNotesModal, { hasNewPatchNotes, markPatchNotesSeen } from './components/PatchNotesModal';
 import UpdateBanner from './components/UpdateBanner';
+import useDeepLink from './hooks/useDeepLink';
 import LoginPage from './pages/LoginPage';
 import PurchasesPage from './pages/PurchasesPage';
 import OrdersPage from './pages/OrdersPage';
@@ -96,11 +97,33 @@ export default function App() {
   const [screen, setScreen] = useState('login');
   const [connectionInfo, setConnectionInfo] = useState(null);
   const [activeModule, setActiveModule] = useState('dashboard');
+  const [initialRecord, setInitialRecord] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showPatchNotes, setShowPatchNotes] = useState(false);
   const [hasNewNotes, setHasNewNotes] = useState(hasNewPatchNotes());
+  const { deepLink, clearDeepLink, pendingContext, activateContext } = useDeepLink();
 
   const userRole = connectionInfo?.role || 'USERS';
+
+  // Handle deep links (URL params or CSD context)
+  useEffect(() => {
+    if (deepLink?.module && deepLink?.record) {
+      const validModule = MODULES.find(m => m.id === deepLink.module && m.active);
+      if (validModule) {
+        // Don't navigate to admin-only modules for non-admins
+        if (ADMIN_ONLY_MODULES.includes(deepLink.module) && userRole !== 'ADMIN') return;
+        setActiveModule(deepLink.module);
+        setInitialRecord(deepLink.record);
+        clearDeepLink();
+      }
+    }
+  }, [deepLink, clearDeepLink, userRole]);
+
+  // Clear initial record when user manually changes modules
+  function handleModuleChange(moduleId) {
+    setActiveModule(moduleId);
+    setInitialRecord('');
+  }
 
   function handleConnected(info) {
     setConnectionInfo(info);
@@ -128,6 +151,15 @@ export default function App() {
     security: SecurityPage,
   };
 
+  // Map modules to which filter field receives the initial record
+  const MODULE_RECORD_FIELD = {
+    orders: 'pono', purchases: 'pono', transfers: 'pono',
+    customers: 'custno', vendors: 'vendno',
+    prod_whse: 'prod', prod_line: 'prod', catalog: 'prod', inventory: 'prod',
+    pricing_cust: 'custno', pricing_vend: 'vendno',
+    security: 'operinit',
+  };
+
   // Prevent non-admins from accessing security even via direct state
   const ActivePage = ADMIN_ONLY_MODULES.includes(activeModule) && userRole !== 'ADMIN'
     ? null : PAGE_MAP[activeModule];
@@ -141,7 +173,7 @@ export default function App() {
       }}>
       <Sidebar
         activeModule={activeModule}
-        onModuleChange={setActiveModule}
+        onModuleChange={handleModuleChange}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         connectionInfo={connectionInfo}
@@ -197,8 +229,12 @@ export default function App() {
 
         {/* Content */}
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
-          {activeModule === 'dashboard' && <DashboardPage onNavigate={setActiveModule} userRole={userRole} />}
-          {ActivePage && <ActivePage />}
+          {activeModule === 'dashboard' && <DashboardPage onNavigate={handleModuleChange} userRole={userRole} />}
+          {ActivePage && <ActivePage
+            key={`${activeModule}-${initialRecord}`}
+            initialRecord={initialRecord}
+            initialRecordField={MODULE_RECORD_FIELD[activeModule] || 'pono'}
+          />}
         </div>
       </div>
 

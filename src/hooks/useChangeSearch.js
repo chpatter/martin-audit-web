@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { searchChanges, cancelSearch } from '../services/api';
 import { FILTER_DEFS } from '../components/ResultFilters';
 
@@ -12,6 +12,8 @@ import { FILTER_DEFS } from '../components/ResultFilters';
  * @param {Array} options.csvHeaders - Column headers for CSV export
  * @param {function} options.csvRowMapper - Maps a change record to a CSV row array
  * @param {string} options.exportFilename - Base filename for CSV export
+ * @param {string} options.initialRecord - Pre-fill record# and auto-search on mount (from deep link / CSD context)
+ * @param {string} options.initialRecordField - Which filter field to populate ('pono', 'custno', 'vendno', 'prod')
  */
 export default function useChangeSearch({
   defaultTables = ['poeh', 'poel'],
@@ -19,10 +21,18 @@ export default function useChangeSearch({
   csvHeaders = [],
   csvRowMapper = null,
   exportFilename = 'changes',
+  initialRecord = '',
+  initialRecordField = 'pono',
 } = {}) {
   const defaultFromDate = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
   const [changes, setChanges] = useState([]);
-  const [filters, setFilters] = useState({ fromDate: defaultFromDate, toDate: '', pono: '', whse: '', source: '', custno: '', vendno: '', operinit: '', buyer: '', shipto: '', prod: '', limit: '', includeNew: true });
+  const [filters, setFilters] = useState({
+    fromDate: defaultFromDate, toDate: '', pono: '', whse: '', source: '',
+    custno: '', vendno: '', operinit: '', buyer: '', shipto: '', prod: '',
+    limit: '', includeNew: true,
+    // Pre-fill the right field if an initial record was provided
+    ...(initialRecord ? { [initialRecordField]: initialRecord } : {}),
+  });
   const [sortCol, setSortCol] = useState('transdt');
   const [sortDir, setSortDir] = useState('desc');
   const [loading, setLoading] = useState(false);
@@ -34,6 +44,13 @@ export default function useChangeSearch({
   const [columnFilters, setColumnFilters] = useState({});
   const [columnFiltersOpen, setColumnFiltersOpen] = useState(false);
 
+const autoSearchFired = useRef(false);
+useEffect(() => {
+  if (initialRecord && !autoSearchFired.current) {
+    autoSearchFired.current = true;
+    setTimeout(() => handleSearch(), 500);
+  }
+}, [initialRecord, handleSearch]);
   async function handleSearch() {
     setLoading(true);
     setError(null);

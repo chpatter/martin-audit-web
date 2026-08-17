@@ -71,7 +71,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function PricingVendPage() {
+export default function PricingVendPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -81,6 +81,7 @@ export default function PricingVendPage() {
   } = useChangeSearch({
     defaultTables: ['pdsv'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'vendor-pricing-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

@@ -68,7 +68,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function VendorsPage() {
+export default function VendorsPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -78,6 +78,7 @@ export default function VendorsPage() {
   } = useChangeSearch({
     defaultTables: ['apsv', 'apss'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'vendor-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

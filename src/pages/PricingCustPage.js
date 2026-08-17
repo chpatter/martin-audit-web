@@ -90,7 +90,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function PricingCustPage() {
+export default function PricingCustPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -100,6 +100,7 @@ export default function PricingCustPage() {
   } = useChangeSearch({
     defaultTables: ['pdsc'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'customer-pricing-changes',
+    initialRecord, initialRecordField,
   });
 
   // Map levelcd to labels for display

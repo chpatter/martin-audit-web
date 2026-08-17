@@ -73,7 +73,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function SecurityPage() {
+export default function SecurityPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -83,6 +83,7 @@ export default function SecurityPage() {
   } = useChangeSearch({
     defaultTables: ['sasoo', 'pv_user', 'pv_secure', 'authsecure'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'security-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

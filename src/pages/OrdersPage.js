@@ -71,7 +71,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function OrdersPage() {
+export default function OrdersPage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -81,6 +81,7 @@ export default function OrdersPage() {
   } = useChangeSearch({
     defaultTables: ['oeeh', 'oeel'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'order-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

@@ -68,7 +68,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function ProdLinePage() {
+export default function ProdLinePage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -78,6 +78,7 @@ export default function ProdLinePage() {
   } = useChangeSearch({
     defaultTables: ['icsl'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'prodline-changes',
+    initialRecord, initialRecordField,
   });
 
   return (

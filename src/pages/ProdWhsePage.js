@@ -69,7 +69,7 @@ function csvRowMapper(row) {
 
 // ─── Page Component ───
 
-export default function ProdWhsePage() {
+export default function ProdWhsePage({ initialRecord = '', initialRecordField = 'pono' }) {
   const { theme } = useTheme();
   const {
     changes, filters, setFilters, sortCol, sortDir, loading, error, hasSearched, queryInfo,
@@ -79,6 +79,7 @@ export default function ProdWhsePage() {
   } = useChangeSearch({
     defaultTables: ['icsp', 'icsw'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'product-warehouse-changes',
+    initialRecord, initialRecordField,
   });
 
   return (
