@@ -10,7 +10,6 @@ import LoginPage from './pages/LoginPage';
 import PurchasesPage from './pages/PurchasesPage';
 import OrdersPage from './pages/OrdersPage';
 import ProductsPage from './pages/ProductsPage';
-import WarehousePage from './pages/WarehousePage';
 import ProdLinePage from './pages/ProdLinePage';
 import CustomersPage from './pages/CustomersPage';
 import InventoryPage from './pages/InventoryPage';
@@ -141,7 +140,6 @@ export default function App() {
     purchases: PurchasesPage,
     orders: OrdersPage,
     products: ProductsPage,
-    warehouse: WarehousePage,
     prod_line: ProdLinePage,
     customers: CustomersPage,
     inventory: InventoryPage,
@@ -157,7 +155,7 @@ export default function App() {
   const MODULE_RECORD_FIELD = {
     orders: 'pono', purchases: 'pono', transfers: 'pono',
     customers: 'custno', vendors: 'vendno',
-    products: 'prod', warehouse: 'prod', prod_line: 'prod', catalog: 'prod', inventory: 'prod',
+    products: 'prod', prod_line: 'prod', catalog: 'prod', inventory: 'prod',
     pricing_cust: 'custno', pricing_vend: 'vendno',
     security: 'operinit',
   };
@@ -191,7 +189,7 @@ export default function App() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: theme.colors.textBright }}>
-              {activeModule === 'dashboard' ? '🏠 Dashboard' : `${currentModule?.icon} ${currentModule?.label}`}
+              {activeModule === 'dashboard' ? '📊 Dashboard' : `${currentModule?.icon} ${currentModule?.label}`}
             </h2>
             {currentModule?.badge && <Badge variant="warning">{currentModule.badge}</Badge>}
           </div>

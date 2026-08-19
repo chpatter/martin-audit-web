@@ -158,10 +158,10 @@ AD security groups (must be on-prem ADUC — cloud-only Entra groups don't work 
 
 | AD Group | Role | Modules | What's Visible |
 |----------|------|---------|---------------|
-| Martin-Audit-Users | USERS | 12 (no Security) | Operational fields only. Pricing/cost/banking masked as `●●●●●●` |
-| Martin-Audit-Finance | FINANCE | 12 (no Security) | + pricing, costs, margins, credit limits, discounts |
-| Martin-Audit-Sensitive | SENSITIVE | 12 (no Security) | + bank accounts, routing numbers, tax IDs, 1099 info |
-| Martin-Audit-Admin | ADMIN | All 13 | Everything unmasked, including Security module |
+| Martin-Audit-Users | USERS | 11 (no Security) | Operational fields only. Pricing/cost/banking masked as `●●●●●●` |
+| Martin-Audit-Finance | FINANCE | 11 (no Security) | + pricing, costs, margins, credit limits, discounts |
+| Martin-Audit-Sensitive | SENSITIVE | 11 (no Security) | + bank accounts, routing numbers, tax IDs, 1099 info |
+| Martin-Audit-Admin | ADMIN | All 12 | Everything unmasked, including Security module |
 
 **Masking is server-side.** `maskChanges()` replaces real values with `●●●●●●` before the response is sent. The browser never receives the actual data. There is nothing to unredact client-side.
 
@@ -201,8 +201,7 @@ AD security groups (must be on-prem ADUC — cloud-only Entra groups don't work 
 | Orders | OrdersPage.js | OEEH, OEEL | 66+56 | Order#, Source, Warehouse, Customer#, Operator, Dates, Limit |
 | Pricing-Customer | PricingCustPage.js | PDSC | 77 | Record#, Source, Warehouse, Customer#, Product#, Operator, Dates, Limit |
 | Pricing-Vendor | PricingVendPage.js | PDSV | 44 | Vendor#, Source, Product#, Operator, Dates, Limit |
-| Products | ProductsPage.js | ICSP | 16 | Product#, Source, Operator, Dates, Limit |
-| Warehouse | WarehousePage.js | ICSW | 32 | Product#, Source, Warehouse, Operator, Dates, Limit |
+| Products | ProductsPage.js | ICSP, ICSW | 16+32 | Product#, Source, Operator, Dates, Limit |
 | Product Line | ProdLinePage.js | ICSL | 56 | ProdLine, Source, Warehouse, Vendor#, Operator, Dates, Limit |
 | Purchases | PurchasesPage.js | POEH, POEL | 34+23 | PO#, Source, Warehouse, Operator, Dates, Limit |
 | Security | SecurityPage.js | SASOO, PV_USER, PV_SECURE, AUTHSECURE | 90+46+3+10 | Operator(dropdown), Source, Operator ID, Dates, Limit |

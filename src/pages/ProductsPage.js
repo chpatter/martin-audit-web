@@ -11,17 +11,21 @@ import { formatDateTime } from '../utils/format';
 
 const SOURCE_TABLES = [
   { key: 'ICSP', color: '#60a5fa' },
+  { key: 'ICSW', color: '#fbbf24' },
 ];
 
 const SOURCE_OPTIONS = [
   { value: 'icsp', label: 'ICSP (Product Master)' },
+  { value: 'icsw', label: 'ICSW (Warehouse Product)' },
 ];
 
-const FILTER_KEYS = ['source', 'record', 'field', 'transproc', 'new_value', 'old_value', 'transdt', 'effectiveEnd', 'oper', 'description'];
+const FILTER_KEYS = ['source', 'record', 'lineno', 'whse', 'field', 'transproc', 'new_value', 'old_value', 'transdt', 'effectiveEnd', 'oper', 'description'];
 
 const FILTER_LABELS = {
   source: 'Data Source',
   record: 'Product',
+  lineno: 'Warehouse',
+  whse: 'whse',
   field: 'Product Changes',
   transproc: 'Transaction Process',
   new_value: 'New Value',
@@ -35,6 +39,7 @@ const FILTER_LABELS = {
 const COLUMNS = [
   { key: 'source', label: 'Data Source', width: 70 },
   { key: 'pono', label: 'Product', width: 120 },
+  { key: 'lineno', label: 'Warehouse', width: 80 },
   { key: 'field_label', label: 'Product Changes', width: 260 },
   { key: 'transproc', label: 'Transaction Process', width: 150 },
   { key: 'new_value', label: 'New Value', width: 200 },
@@ -46,7 +51,7 @@ const COLUMNS = [
 ];
 
 const CSV_HEADERS = [
-  'Data Source', 'Product',
+  'Data Source', 'Product', 'Warehouse',
   'Product Changes', 'Transaction Process', 'New Value',
   'Original Value', 'Effective Start DateTime', 'Effective End DateTime',
   'User and OperID', 'description',
@@ -54,7 +59,7 @@ const CSV_HEADERS = [
 
 function csvRowMapper(row) {
   return [
-    row.source, row.pono,
+    row.source, row.pono, row.lineno || '',
     `${row.field_label} - (${row.field_name})`, row.transproc || '', row.new_value || '', row.old_value || '',
     formatDateTime(row.transdt, row.transtm), row.effectiveEnd || '12/31/2046 12:00 AM',
     row.opername || row.oper || '', row.description || '',
@@ -71,7 +76,7 @@ export default function ProductsPage({ initialRecord = '', initialRecordField = 
     columnFilters, columnFiltersOpen, setColumnFiltersOpen, handleColumnFilterChange,
     sortedChanges, handleSearch, handleClear, handleCancel, handleSort, handleExportCSV,
   } = useChangeSearch({
-    defaultTables: ['icsp'],
+    defaultTables: ['icsp', 'icsw'],
     filterKeys: FILTER_KEYS, csvHeaders: CSV_HEADERS, csvRowMapper, exportFilename: 'product-changes',
     initialRecord, initialRecordField,
   });
@@ -84,8 +89,8 @@ export default function ProductsPage({ initialRecord = '', initialRecordField = 
         filters={filters} setFilters={setFilters} loading={loading}
         onSearch={handleSearch} onClear={handleClear} onCancel={handleCancel} onExport={handleExportCSV} hasData={changes.length > 0}
         recordLabel="Product #" recordPlaceholder="1138256, 3400123" sourceOptions={SOURCE_OPTIONS}
-        recordTooltip="Search by product number. Shows changes to product master settings."
-        showOperator
+        recordTooltip="Search by product number. Shows changes to product master settings and warehouse-level settings."
+        showWarehouse showOperator
       />
 
       {error && (

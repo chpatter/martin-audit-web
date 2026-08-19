@@ -25,7 +25,7 @@ const PATCH_NOTES = [
       { type: 'added', text: 'Value translations — coded fields now show human-readable labels (e.g. stage code "1" displays as "1 (Ordered)", status "a" displays as "a (Active)")' },
       { type: 'added', text: '60+ field mappings across all modules: stage codes, status types, approval types, transaction types, product types, pricing types, and more' },
       { type: 'added', text: 'Module info tooltips — hover the "i" icon next to any sidebar module to see which tables it queries' },
-      { type: 'changed', text: 'Prod/Whse module split into separate Products (ICSP) and Warehouse (ICSW) modules per user feedback' },
+      { type: 'changed', text: 'Prod/Whse module replaced with Products module — queries both ICSP and ICSW with warehouse filter support' },
       { type: 'changed', text: 'Prod Line renamed to Product Line' },
       { type: 'changed', text: 'Unique icons for all 13 modules — no more duplicates' },
       { type: 'changed', text: 'Sidebar modules alphabetized' },

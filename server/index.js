@@ -461,6 +461,13 @@ app.post('/api/changes/search', async (req, res) => {
       source ? [source.toLowerCase()] : (requestedTables || ['poeh', 'poel']),
       req.userRole
     );
+
+    // Skip tables that don't have a whse column when warehouse filter is specified
+    const TABLES_WITHOUT_WHSE = ['icsp', 'arsc', 'apsv', 'sasoo', 'pv_user', 'pv_secure', 'authsecure'];
+    const filteredTables = (whse || (whses && whses.length > 0))
+      ? tables.filter(t => !TABLES_WITHOUT_WHSE.includes(t.toLowerCase()))
+      : tables;
+
     let allChanges = [];
 
     if (ponos && ponos.length > 0) {
@@ -468,7 +475,7 @@ app.post('/api/changes/search', async (req, res) => {
       for (const entry of ponos) {
         if (compass.cancelled) break;
         const filters = { pono: entry.pono, posuf: entry.posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit, buyer, shipto };
-        for (const table of tables) {
+        for (const table of filteredTables) {
           if (compass.cancelled) break;
           const rows = await queryVariations(table, filters);
           allChanges.push(...processTableRows(table, rows));
@@ -477,7 +484,7 @@ app.post('/api/changes/search', async (req, res) => {
     } else {
       // Single record or date range search
       const filters = { pono, posuf, fromDate, toDate, whse, whses, vendno, custno, prod, operinit, buyer, shipto };
-      for (const table of tables) {
+      for (const table of filteredTables) {
         if (compass.cancelled) break;
         const rows = await queryVariations(table, filters);
         allChanges.push(...processTableRows(table, rows));
