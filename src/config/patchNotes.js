@@ -15,6 +15,14 @@
 
 const PATCH_NOTES = [
   {
+    version: '1.0.5',
+    date: '2026-09-25',
+    title: 'Timezone Fix',
+    changes: [
+      { type: 'fixed', text: 'Timestamp conversion corrected — Compass values (stored in UTC) now display accurately in each user\'s local timezone. A double-conversion bug previously threw times off for anyone outside Central Daylight (e.g. Eastern users saw times an hour late), and the error drifted with Daylight Saving so it looked correct for different regions at different times of year.' },
+    ],
+  },
+  {
     version: '1.0.4',
     date: '2026-08-17',
     title: 'Value Translations, Module Redesign & Deep Links',

@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../config/ThemeContext';
 import MODULES from '../config/modules';
+import { CURRENT_VERSION } from '../config/patchNotes';
 import InfoTip from './InfoTip';
 
 export default function Sidebar({ activeModule, onModuleChange, collapsed, onToggle, connectionInfo, userRole }) {
   const { theme, isDark, toggleTheme } = useTheme();
+
+  // Pull the live app version from the server (reads package.json via /api/version).
+  // Seeded with CURRENT_VERSION so it renders instantly with no flash / offline fallback.
+  const [version, setVersion] = useState(CURRENT_VERSION);
+  useEffect(() => {
+    fetch('/api/version', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => { if (data?.version) setVersion(data.version); })
+      .catch(() => {}); // keep the seeded value if the request fails
+  }, []);
+
   const ADMIN_ONLY_MODULES = ['security'];
   const visibleModules = MODULES.filter(m => {
     if (ADMIN_ONLY_MODULES.includes(m.id) && userRole !== 'ADMIN') return false;
@@ -185,7 +197,7 @@ export default function Sidebar({ activeModule, onModuleChange, collapsed, onTog
                 textAlign: 'center', letterSpacing: '0.1em',
               }}
             >
-              {connectionInfo?.operator || 'CONNECTED'} · v1.0.4
+              {connectionInfo?.operator || 'CONNECTED'} · v{version}
             </div>
           </>
         )}
