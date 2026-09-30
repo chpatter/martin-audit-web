@@ -78,6 +78,18 @@ const VALUE_TRANSLATIONS = {
     'i': 'Inactive',
   },
 
+  'arsc.taxablety': {
+    'y': 'Yes',
+    'n': 'No',
+    'v': 'Variable (Based on Product)',
+  },
+
+  'arss.taxablety': {
+    'y': 'Yes',
+    'n': 'No',
+    'v': 'Variable (Based on Product)',
+  },
+
   'icsc.statustype': {
     'a': 'Active',
     'i': 'Inactive',

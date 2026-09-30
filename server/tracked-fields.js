@@ -410,6 +410,7 @@ const TRACKED_FIELDS = {
   arsc: {
     // ── Status & Terms ──
     statustype:  { label: 'Status', desc: 'Customer active/inactive status. Yes = Active, No = Inactive' },
+    taxablety:   { label: 'Taxable Type', desc: '(Y)es, (N)o, or (V)ariable Based on Product' },
     credlim:     { label: 'Credit Limit', desc: 'Credit Limit' },
     termstype:   { label: 'Terms Type', desc: 'Default terms for a OE order. Value is set up in the SASTT function or SASTA table where codeiden = "T"' },
     shipviaty:   { label: 'Ship Via', desc: 'Default Ship Via code for an order' },
@@ -464,6 +465,7 @@ const TRACKED_FIELDS = {
   arss: {
     // ── Status & Terms ──
     statustype:  { label: 'Status', desc: 'Ship-to active/inactive status. A = Active, I = Inactive' },
+    taxablety:   { label: 'Taxable Type', desc: '(Y)es, (N)o, or (V)ariable Based on Product' },
     credlim:     { label: 'Credit Limit', desc: 'Ship-to credit limit amount' },
     termstype:   { label: 'Terms Type', desc: 'Ship-to payment terms' },
     shipviaty:   { label: 'Ship Via', desc: 'This field describes the ship via.' },

@@ -20,6 +20,7 @@ const PATCH_NOTES = [
     title: 'Timezone Fix',
     changes: [
       { type: 'fixed', text: 'Timestamp conversion corrected — Compass values (stored in UTC) now display accurately in each user\'s local timezone. A double-conversion bug previously threw times off for anyone outside Central Daylight (e.g. Eastern users saw times an hour late), and the error drifted with Daylight Saving so it looked correct for different regions at different times of year.' },
+      { type: 'added', text: 'Taxable Type field added to Customers (ARSC) and Ship-To (ARSS) with value translations' },
     ],
   },
   {
